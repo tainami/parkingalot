@@ -5,7 +5,6 @@ REST API em Flask + SQLAlchemy para controle de estacionamento.
 ## Requirements
  
 - Python 3.12+
-- Docker (opcional)
 
 ## Setup
  
@@ -22,7 +21,6 @@ pip install -r requirements.txt
  
 ```
 DATABASE_URL=sqlite:///parkingalot.db
-FLASK_ENV=development
 ```
  
 ## Run
@@ -32,17 +30,3 @@ python run.py
 ```
  
 Server: `http://127.0.0.1:5000`
- 
-## Run with Docker
- 
-```bash
-docker compose up --build
-```
- 
-Server: `http://localhost:5000`
- 
-Stop:
- 
-```bash
-docker compose down
-```
