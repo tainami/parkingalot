@@ -1,0 +1,1 @@
+# vazio por enquanto, cada arquivo de rota vira um blueprint
