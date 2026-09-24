@@ -1,1 +1,3 @@
-# vazio por enquanto, cada arquivo de rota vira um blueprint
+from app.routes.colaborador import bp as colaborador_bp
+
+blueprints = [colaborador_bp]
