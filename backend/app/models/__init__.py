@@ -1,1 +1,0 @@
-# os models de cada entidade (Colaborador, Veiculo, Guarda, Vaga, Pagamento, Registro) vão aqui

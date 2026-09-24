@@ -30,3 +30,12 @@ python run.py
 ```
  
 Server: `http://127.0.0.1:5000`
+ 
+## Lint / Format (Ruff)
+ 
+```bash
+ruff check .
+ruff format .
+```
+ 
+(pra formatar automático ao salvar, baixe a extensão Ruff do VSCode)
