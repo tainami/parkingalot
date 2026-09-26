@@ -1,10 +1,11 @@
 from app import db
 
+
 class Guarda(db.Model):
-    __tablename__="guarda"
+    __tablename__ = "guarda"
 
     cpf_guarda = db.Column(db.String(11), primary_key=True)
-    nome_guarda=db.Column(db.String(100), nullable=False)
+    nome_guarda = db.Column(db.String(100), nullable=False)
     turno = db.Column(db.String(100), nullable=False)
     senha = db.Column(db.String(255), nullable=False)
     token = db.Column(db.String(255), nullable=True)

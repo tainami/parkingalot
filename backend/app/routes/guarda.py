@@ -3,20 +3,22 @@ from werkzeug.security import generate_password_hash
 
 from app import db
 from app.models.guarda import Guarda
-from backend.app.routes.login import verificar_token
+from app.routes.login import verificar_token
 
 bp = Blueprint("guarda", __name__, url_prefix="/guardas")
+
 
 @bp.route("/", methods=["GET"])
 def listar():
 
-    guarda_logado=verificar_token()
+    guarda_logado = verificar_token()
     if guarda_logado is None:
         return jsonify({"error": "Não autorizado"}), 401
-    
+
     guardas = db.session.execute(db.select(Guarda)).scalars()
 
     return jsonify([guarda.to_dict() for guarda in guardas])
+
 
 @bp.route("/<string:cpf_guarda>", methods=["GET"])
 def buscar(cpf_guarda):
@@ -30,8 +32,13 @@ def buscar(cpf_guarda):
 
     return jsonify(guarda.to_dict())
 
+
 @bp.route("/", methods=["POST"])
 def cadastrar():
+    guarda_logado = verificar_token()
+    if guarda_logado is None:
+        return jsonify({"error": "Não autorizado"}), 401
+
     dados = request.get_json(silent=True) or {}
     campos_obrigatorios = ["cpf_guarda", "nome_guarda", "turno", "senha"]
     faltando = [campo for campo in campos_obrigatorios if not dados.get(campo)]
@@ -54,12 +61,13 @@ def cadastrar():
 
     return jsonify(guarda.to_dict()), 201
 
+
 @bp.route("/<string:cpf_guarda>", methods=["PUT"])
 def editar(cpf_guarda):
     guarda_logado = verificar_token()
     if guarda_logado is None:
         return jsonify({"error": "Não autorizado"}), 401
-    
+
     guarda = db.session.get(Guarda, cpf_guarda)
 
     if guarda is None:
@@ -69,7 +77,7 @@ def editar(cpf_guarda):
 
     if "senha" in dados:
         guarda.senha = generate_password_hash(dados["senha"])
-    
+
     for campo in ["nome_guarda", "turno"]:
         if campo in dados:
             setattr(guarda, campo, dados[campo])
@@ -77,6 +85,7 @@ def editar(cpf_guarda):
     db.session.commit()
 
     return jsonify(guarda.to_dict())
+
 
 @bp.route("/<string:cpf_guarda>", methods=["DELETE"])
 def deletar(cpf_guarda):
