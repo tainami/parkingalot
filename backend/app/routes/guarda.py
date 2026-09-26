@@ -3,28 +3,23 @@ from werkzeug.security import generate_password_hash
 
 from app import db
 from app.models.guarda import Guarda
-from app.routes.login import verificar_token
+from app.routes.login import autenticacao_obrigatoria
+from app.validacao import campos_faltando
 
 bp = Blueprint("guarda", __name__, url_prefix="/guardas")
 
 
 @bp.route("/", methods=["GET"])
+@autenticacao_obrigatoria
 def listar():
-
-    guarda_logado = verificar_token()
-    if guarda_logado is None:
-        return jsonify({"error": "Não autorizado"}), 401
-
     guardas = db.session.execute(db.select(Guarda)).scalars()
 
     return jsonify([guarda.to_dict() for guarda in guardas])
 
 
 @bp.route("/<string:cpf_guarda>", methods=["GET"])
+@autenticacao_obrigatoria
 def buscar(cpf_guarda):
-    guarda_logado = verificar_token()
-    if guarda_logado is None:
-        return jsonify({"error": "Não autorizado"}), 401
     guarda = db.session.get(Guarda, cpf_guarda)
 
     if guarda is None:
@@ -34,14 +29,10 @@ def buscar(cpf_guarda):
 
 
 @bp.route("/", methods=["POST"])
+@autenticacao_obrigatoria
 def cadastrar():
-    guarda_logado = verificar_token()
-    if guarda_logado is None:
-        return jsonify({"error": "Não autorizado"}), 401
-
     dados = request.get_json(silent=True) or {}
-    campos_obrigatorios = ["cpf_guarda", "nome_guarda", "turno", "senha"]
-    faltando = [campo for campo in campos_obrigatorios if not dados.get(campo)]
+    faltando = campos_faltando(dados, ["cpf_guarda", "nome_guarda", "turno", "senha"])
     if faltando:
         return jsonify(
             {"error": f"Campos obrigatórios faltando: {', '.join(faltando)}"}
@@ -63,11 +54,8 @@ def cadastrar():
 
 
 @bp.route("/<string:cpf_guarda>", methods=["PUT"])
+@autenticacao_obrigatoria
 def editar(cpf_guarda):
-    guarda_logado = verificar_token()
-    if guarda_logado is None:
-        return jsonify({"error": "Não autorizado"}), 401
-
     guarda = db.session.get(Guarda, cpf_guarda)
 
     if guarda is None:
@@ -88,10 +76,8 @@ def editar(cpf_guarda):
 
 
 @bp.route("/<string:cpf_guarda>", methods=["DELETE"])
+@autenticacao_obrigatoria
 def deletar(cpf_guarda):
-    guarda_logado = verificar_token()
-    if guarda_logado is None:
-        return jsonify({"error": "Não autorizado"}), 401
     guarda = db.session.get(Guarda, cpf_guarda)
 
     if guarda is None:
@@ -100,4 +86,4 @@ def deletar(cpf_guarda):
     db.session.delete(guarda)
     db.session.commit()
 
-    return jsonify({"message": "Guarda deletado com sucesso"}), 200
+    return "", 204

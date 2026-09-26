@@ -1,4 +1,5 @@
 import secrets
+from functools import wraps
 
 from flask import Blueprint, jsonify, request
 from werkzeug.security import check_password_hash
@@ -50,3 +51,13 @@ def verificar_token():
     ).scalar_one_or_none()
 
     return guarda
+
+
+def autenticacao_obrigatoria(rota):
+    @wraps(rota)
+    def decorated(*args, **kwargs):
+        if verificar_token() is None:
+            return jsonify({"error": "Não autorizado"}), 401
+        return rota(*args, **kwargs)
+
+    return decorated

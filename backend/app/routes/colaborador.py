@@ -2,28 +2,23 @@ from flask import Blueprint, jsonify, request
 
 from app import db
 from app.models.colaborador import Colaborador
-from app.routes.login import verificar_token
+from app.routes.login import autenticacao_obrigatoria
+from app.validacao import campos_faltando
 
 bp = Blueprint("colaborador", __name__, url_prefix="/colaboradores")
 
 
 @bp.route("/", methods=["GET"])
+@autenticacao_obrigatoria
 def listar():
-    guarda_logado = verificar_token()
-    if guarda_logado is None:
-        return jsonify({"error": "Não autorizado"}), 401
-
     colaboradores = db.session.execute(db.select(Colaborador)).scalars()
 
     return jsonify([colaborador.to_dict() for colaborador in colaboradores])
 
 
 @bp.route("/<int:matricula>", methods=["GET"])
+@autenticacao_obrigatoria
 def buscar(matricula):
-    guarda_logado = verificar_token()
-    if guarda_logado is None:
-        return jsonify({"error": "Não autorizado"}), 401
-
     colaborador = db.session.get(Colaborador, matricula)
 
     if colaborador is None:
@@ -33,15 +28,11 @@ def buscar(matricula):
 
 
 @bp.route("/", methods=["POST"])
+@autenticacao_obrigatoria
 def cadastrar():
-    guarda_logado = verificar_token()
-    if guarda_logado is None:
-        return jsonify({"error": "Não autorizado"}), 401
-
     dados = request.get_json(silent=True) or {}
 
-    campos_obrigatorios = ["matricula", "nome", "setor", "cargo"]
-    faltando = [campo for campo in campos_obrigatorios if not dados.get(campo)]
+    faltando = campos_faltando(dados, ["matricula", "nome", "setor", "cargo"])
     if faltando:
         return jsonify(
             {"error": f"Campos obrigatórios faltando: {', '.join(faltando)}"}
@@ -63,11 +54,8 @@ def cadastrar():
 
 
 @bp.route("/<int:matricula>", methods=["PUT"])
+@autenticacao_obrigatoria
 def editar(matricula):
-    guarda_logado = verificar_token()
-    if guarda_logado is None:
-        return jsonify({"error": "Não autorizado"}), 401
-
     colaborador = db.session.get(Colaborador, matricula)
 
     if colaborador is None:
@@ -84,11 +72,8 @@ def editar(matricula):
 
 
 @bp.route("/<int:matricula>", methods=["DELETE"])
-def excluir(matricula):
-    guarda_logado = verificar_token()
-    if guarda_logado is None:
-        return jsonify({"error": "Não autorizado"}), 401
-
+@autenticacao_obrigatoria
+def deletar(matricula):
     colaborador = db.session.get(Colaborador, matricula)
 
     if colaborador is None:

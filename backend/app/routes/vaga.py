@@ -2,27 +2,21 @@ from flask import Blueprint, jsonify, request
 
 from app import db
 from app.models.vaga import Vaga
-from app.routes.login import verificar_token
+from app.routes.login import autenticacao_obrigatoria
 
 bp = Blueprint("vaga", __name__, url_prefix="/vagas")
 
 
 @bp.route("/", methods=["GET"])
+@autenticacao_obrigatoria
 def listar_vagas():
-    guarda_logado = verificar_token()
-    if guarda_logado is None:
-        return jsonify({"error": "Não autorizado"}), 401
-
     vagas = db.session.execute(db.select(Vaga)).scalars()
     return jsonify([vaga.to_dict() for vaga in vagas])
 
 
 @bp.route("/<int:numero>", methods=["GET"])
+@autenticacao_obrigatoria
 def buscar_vaga(numero):
-    guarda_logado = verificar_token()
-    if guarda_logado is None:
-        return jsonify({"error": "Não autorizado"}), 401
-
     vaga = db.session.get(Vaga, numero)
     if vaga is None:
         return jsonify({"error": "Vaga não encontrada"}), 404
@@ -30,11 +24,8 @@ def buscar_vaga(numero):
 
 
 @bp.route("/", methods=["POST"])
+@autenticacao_obrigatoria
 def criar_vaga():
-    guarda_logado = verificar_token()
-    if guarda_logado is None:
-        return jsonify({"error": "Não autorizado"}), 401
-
     dados = request.get_json(silent=True) or {}
     campos_obrigatorios = ["numero", "tipo_vaga"]
 
@@ -59,11 +50,8 @@ def criar_vaga():
 
 
 @bp.route("/<int:numero>", methods=["PUT"])
+@autenticacao_obrigatoria
 def atualizar_vaga(numero):
-    guarda_logado = verificar_token()
-    if guarda_logado is None:
-        return jsonify({"error": "Não autorizado"}), 401
-
     vaga = db.session.get(Vaga, numero)
 
     if vaga is None:
