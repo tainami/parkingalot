@@ -17,6 +17,10 @@ def create_app():
     for bp in blueprints:
         app.register_blueprint(bp)
 
+    from app.cli import register_cli
+
+    register_cli(app)
+
     with app.app_context():
         db.create_all()
 

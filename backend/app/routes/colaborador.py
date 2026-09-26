@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 
 from app import db
 from app.models.colaborador import Colaborador
-from backend.app.routes.login import verificar_token
+from app.routes.login import verificar_token
 
 bp = Blueprint("colaborador", __name__, url_prefix="/colaboradores")
 
@@ -12,7 +12,7 @@ def listar():
     guarda_logado = verificar_token()
     if guarda_logado is None:
         return jsonify({"error": "Não autorizado"}), 401
-    
+
     colaboradores = db.session.execute(db.select(Colaborador)).scalars()
 
     return jsonify([colaborador.to_dict() for colaborador in colaboradores])
@@ -23,7 +23,7 @@ def buscar(matricula):
     guarda_logado = verificar_token()
     if guarda_logado is None:
         return jsonify({"error": "Não autorizado"}), 401
-    
+
     colaborador = db.session.get(Colaborador, matricula)
 
     if colaborador is None:
@@ -37,7 +37,7 @@ def cadastrar():
     guarda_logado = verificar_token()
     if guarda_logado is None:
         return jsonify({"error": "Não autorizado"}), 401
-    
+
     dados = request.get_json(silent=True) or {}
 
     campos_obrigatorios = ["matricula", "nome", "setor", "cargo"]
@@ -67,7 +67,7 @@ def editar(matricula):
     guarda_logado = verificar_token()
     if guarda_logado is None:
         return jsonify({"error": "Não autorizado"}), 401
-    
+
     colaborador = db.session.get(Colaborador, matricula)
 
     if colaborador is None:
@@ -88,7 +88,7 @@ def excluir(matricula):
     guarda_logado = verificar_token()
     if guarda_logado is None:
         return jsonify({"error": "Não autorizado"}), 401
-    
+
     colaborador = db.session.get(Colaborador, matricula)
 
     if colaborador is None:
