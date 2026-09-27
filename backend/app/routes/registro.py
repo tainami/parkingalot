@@ -7,18 +7,59 @@ from app.models.registro import Registro
 from app.routes.login import verificar_token
 from datetime import datetime
 
-from parkingalot.backend.app.models import registro
-
 bp = Blueprint("registro", __name__, url_prefix="/registros")
 
 @bp.route("/", methods=["GET"])
 def listar():
     guarda_logado = verificar_token()
+
     if guarda_logado is None:
         return jsonify({"error": "Não autorizado"}), 401
 
-    registros = db.session.execute(db.select(Registro)).scalars()
-    return jsonify([registro.to_dict() for registro in registros])
+    data = request.args.get("data")
+    placa = request.args.get("placa")
+
+    query = db.select(Registro)
+
+    if data:
+        try:
+            data_consulta = datetime.strptime(
+                data,
+                "%Y-%m-%d"
+            ).date()
+        except ValueError:
+            return jsonify({
+                "error": "Data inválida. Use o formato AAAA-MM-DD"
+            }), 400
+
+        inicio = datetime.combine(
+            data_consulta,
+            datetime.min.time()
+        )
+
+        fim = datetime.combine(
+            data_consulta,
+            datetime.max.time()
+        )
+
+        query = query.where(
+            Registro.data_entrada >= inicio,
+            Registro.data_entrada <= fim
+        )
+
+    if placa:
+        query = query.where(
+            Registro.placa == placa
+        )
+
+    registros = db.session.execute(
+        query
+    ).scalars().all()
+
+    return jsonify([
+        registro.to_dict()
+        for registro in registros
+    ])
 
 @bp.route("/<int:id_registro>", methods=["GET"])
 def buscar(id_registro):
@@ -104,10 +145,67 @@ def atualizar(id_registro):
     if guarda_logado is None:
         return jsonify({"error": "Não autorizado"}), 401
 
+    registro = db.session.get(
+        Registro,
+        id_registro
+    )
+
+    if registro is None:
+        return jsonify({
+            "error": "Registro não encontrado"
+        }), 404
+
+    dados = request.get_json(silent=True) or {}
+
+    if "placa" in dados:
+        if db.session.get(
+            Veiculo,
+            dados["placa"]
+        ) is None:
+            return jsonify({
+                "error": "Veículo não encontrado"
+            }), 404
+
+        registro.placa = dados["placa"]
+
+    if "numero_vaga" in dados:
+        vaga = db.session.get(
+            Vaga,
+            dados["numero_vaga"]
+        )
+
+        if vaga is None:
+            return jsonify({
+                "error": "Vaga não encontrada"
+            }), 404
+
+        if (
+            vaga.status_vaga
+            and vaga.numero != registro.numero_vaga
+        ):
+            return jsonify({
+                "error": "Vaga já ocupada"
+            }), 409
+
+        registro.numero_vaga = dados["numero_vaga"]
+
+    db.session.commit()
+
+    return jsonify(registro.to_dict())
+
+@bp.route("/<int:id_registro>", methods=["DELETE"])
+def deletar(id_registro):
+    guarda_logado = verificar_token()
+
+    if guarda_logado is None:
+        return jsonify({"error": "Não autorizado"}), 401
+
     registro = db.session.get(Registro, id_registro)
 
     if registro is None:
         return jsonify({"error": "Registro não encontrado"}), 404
 
-    dados = request.get_json(silent=True) or {}
-    
+    db.session.delete(registro)
+    db.session.commit()
+
+    return jsonify({"message": "Registro excluído com sucesso"}), 200
