@@ -6,11 +6,9 @@ class Pagamento(db.Model):
 
     id_pagamento = db.Column(db.Integer, primary_key=True)
     id_registro = db.Column(
-        db.Integer,
-        db.ForeignKey("registro.id_registro"),
-        nullable=False
+        db.Integer, db.ForeignKey("registro.id_registro"), nullable=False
     )
-    valor = db.Column(db.Numeric, nullable=False)
+    valor = db.Column(db.Numeric(10, 2), nullable=False)
     data_pagamento = db.Column(db.Date, nullable=False)
     hora_pagamento = db.Column(db.Time, nullable=False)
     tipo_cartao = db.Column(db.String(50), nullable=True)
@@ -20,9 +18,9 @@ class Pagamento(db.Model):
         return {
             "id_pagamento": self.id_pagamento,
             "id_registro": self.id_registro,
-            "valor": self.valor,
-            "data_pagamento": self.data_pagamento,
-            "hora_pagamento": self.hora_pagamento,
+            "valor": float(self.valor),
+            "data_pagamento": self.data_pagamento.isoformat(),
+            "hora_pagamento": self.hora_pagamento.isoformat(),
             "tipo_cartao": self.tipo_cartao,
             "status_pagamento": self.status_pagamento,
         }
