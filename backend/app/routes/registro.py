@@ -6,6 +6,7 @@ from app.models.vaga import Vaga
 from app.models.registro import Registro
 from app.routes.login import verificar_token
 from datetime import datetime
+from app.models.pagamento import Pagamento
 
 bp = Blueprint("registro", __name__, url_prefix="/registros")
 
@@ -124,6 +125,8 @@ def saida(id_registro):
     registro = db.session.get(Registro, id_registro)
     if registro is None:
         return jsonify({"error": "Registro não encontrado"}), 404
+
+    veiculo = db.session.get(Veiculo, registro.placa)
 
     if registro.data_saida is not None:
         return jsonify({"error": "Registro já possui data de saída"}), 400
