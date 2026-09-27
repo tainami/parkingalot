@@ -11,7 +11,13 @@ bp = Blueprint("veiculo", __name__, url_prefix="/veiculos")
 @bp.route("/", methods=["GET"])
 @autenticacao_obrigatoria
 def listar():
-    veiculos = db.session.execute(db.select(Veiculo)).scalars()
+    consulta = db.select(Veiculo)
+
+    matricula_colaborador = request.args.get("matricula_colaborador")
+    if matricula_colaborador:
+        consulta = consulta.where(Veiculo.matricula_colaborador == matricula_colaborador)
+
+    veiculos = db.session.execute(consulta).scalars()
 
     return jsonify([veiculo.to_dict() for veiculo in veiculos])
 
