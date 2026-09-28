@@ -1,12 +1,12 @@
-from flask import Blueprint, jsonify, request
 from datetime import datetime, timedelta
 from decimal import Decimal
+
+from flask import Blueprint, jsonify, request
 
 from app import db
 from app.models.pagamento import Pagamento
 from app.models.registro import Registro
 from app.routes.login import verificar_token
-
 
 bp = Blueprint("pagamento", __name__, url_prefix="/pagamentos")
 
@@ -80,10 +80,8 @@ def criar():
         valor = Decimal("0.00")
     else:
         tempo_cobrado = tempo - tempo_abonado
-
         minutos_cobrados = Decimal(str(tempo_cobrado.total_seconds() / 60))
-
-    valor = (Decimal("3.00") / Decimal("60")) * minutos_cobrados
+        valor = (Decimal("3.00") / Decimal(60)) * minutos_cobrados
 
     agora = datetime.now()
 

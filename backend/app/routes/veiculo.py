@@ -15,7 +15,12 @@ def listar():
 
     matricula_colaborador = request.args.get("matricula_colaborador")
     if matricula_colaborador:
-        consulta = consulta.where(Veiculo.matricula_colaborador == matricula_colaborador)
+        if not matricula_colaborador.isdigit():
+            return jsonify({"error": "matricula_colaborador deve ser um número"}), 400
+
+        consulta = consulta.where(
+            Veiculo.matricula_colaborador == int(matricula_colaborador)
+        )
 
     veiculos = db.session.execute(consulta).scalars()
 

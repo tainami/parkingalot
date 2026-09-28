@@ -1,12 +1,12 @@
+from datetime import datetime
+
 from flask import Blueprint, jsonify, request
 
 from app import db
-from app.models.veiculo import Veiculo
-from app.models.vaga import Vaga
 from app.models.registro import Registro
+from app.models.vaga import Vaga
+from app.models.veiculo import Veiculo
 from app.routes.login import verificar_token
-from datetime import datetime
-from app.models.pagamento import Pagamento
 
 bp = Blueprint("registro", __name__, url_prefix="/registros")
 
@@ -82,10 +82,23 @@ def criar():
     if vaga is None:
         return jsonify({"error": "Vaga não encontrada"}), 404
 
-    if vaga.status_vaga:
+    registro_aberto = db.session.execute(
+        db.select(Registro).where(
+            Registro.placa == dados["placa"], Registro.data_saida.is_(None)
+        )
+    ).scalar_one_or_none()
+
+    if registro_aberto is not None:
+        return jsonify({"error": "Veículo já possui um registro em aberto"}), 409
+
+    resultado = db.session.execute(
+        db.update(Vaga)
+        .where(Vaga.numero == dados["numero_vaga"], Vaga.status_vaga.is_(False))
+        .values(status_vaga=True)
+    )
+    if resultado.rowcount == 0:
         return jsonify({"error": "Vaga já ocupada"}), 409
 
-    vaga.status_vaga = True
     data_entrada = datetime.now()
 
     registro = Registro(
@@ -109,8 +122,6 @@ def saida(id_registro):
     registro = db.session.get(Registro, id_registro)
     if registro is None:
         return jsonify({"error": "Registro não encontrado"}), 404
-
-    veiculo = db.session.get(Veiculo, registro.placa)
 
     if registro.data_saida is not None:
         return jsonify({"error": "Registro já possui data de saída"}), 400
