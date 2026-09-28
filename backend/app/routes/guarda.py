@@ -65,6 +65,7 @@ def editar(cpf_guarda):
 
     if "senha" in dados:
         guarda.senha = generate_password_hash(dados["senha"])
+        guarda.token = None
 
     for campo in ["nome_guarda", "turno"]:
         if campo in dados:

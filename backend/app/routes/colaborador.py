@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, request
+from sqlalchemy.exc import IntegrityError
 
 from app import db
 from app.models.colaborador import Colaborador
@@ -80,6 +81,10 @@ def deletar(matricula):
         return jsonify({"error": "Colaborador não encontrado"}), 404
 
     db.session.delete(colaborador)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({"error": "Colaborador possui veículo vinculado"}), 409
 
     return "", 204
