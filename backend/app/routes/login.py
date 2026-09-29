@@ -38,6 +38,19 @@ def login():
     ), 200
 
 
+@bp.route("/logout", methods=["POST"])
+def logout():
+    guarda_logado = verificar_token()
+
+    if guarda_logado is None:
+        return jsonify({"error": "Não autorizado"}), 401
+
+    guarda_logado.token = None
+    db.session.commit()
+
+    return jsonify({"message": "Logout realizado com sucesso"}), 200
+
+
 def verificar_token():
     token = request.headers.get("Authorization")
 
