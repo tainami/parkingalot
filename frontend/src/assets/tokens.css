@@ -1,0 +1,21 @@
+:root {
+  --font-family: 'Poppins', sans-serif;
+
+  --color-primary: #1e6fd9;
+  --color-primary-hover: #1757ae;
+  --color-text: #1b2559;
+  --color-text-muted: #5b6573;
+  --color-bg: #f3f5f9;
+  --color-surface: #ffffff;
+  --color-border: #e6e9ef;
+
+  --radius-md: 8px;
+  --control-height: 44px;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-family);
+}
