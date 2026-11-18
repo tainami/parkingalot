@@ -1,8 +1,11 @@
+<script setup lang="ts">
+import AppSideBar from './AppSideBar.vue'
+</script>
+
 <template>
     <div class="app-layout">
         <aside class="sidebar-container">
-            <slot name="sidebar" />
-
+            <AppSideBar />
         </aside>
 
         <main class="main-content">
@@ -29,6 +32,7 @@
     width: 250px;
     min-width: 200px;
     min-height: 100vh;
+    flex-shrink: 0;
     background-color: #FFFF;
     border-right: 1px solid #E5E7EB;
     box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
