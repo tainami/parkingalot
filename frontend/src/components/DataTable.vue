@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import EditButton from './EditButton.vue'
+import DeleteButton from './DeleteButton.vue'
 defineProps<{
     columns: string[]
     rows: Record<string, any>[]
@@ -24,8 +26,8 @@ defineProps<{
                             {{ row[column] }}
                         </td>
                         <td class="actions">
-                            <button class="edit-button" type="button">Editar</button>
-                            <button class="delete-button" type="button">Excluir</button>
+                            <EditButton />
+                            <DeleteButton />
                         </td>
                     </tr>
 
@@ -71,24 +73,9 @@ defineProps<{
 
 .actions{
     white-space: nowrap;
-}
-
-.actions button{
-    padding: 6px 10px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    margin-right: 8px;
-}
-
-.edit-button{
-    background-color: #EAF2FF;
-    color: #2879E8;
-}
-
-.delete-button{
-    background-color: #FEE2E2;
-    color: #DC2626;
+    gap: 8px;
+    display: flex;
+    align-items: center;
 }
 
 .no-data{
