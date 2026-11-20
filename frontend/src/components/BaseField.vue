@@ -4,7 +4,7 @@ withDefaults(
     rotulo: string
     placeholder?: string
     modelValue?: string
-    tipo?: 'text' | 'email' | 'password' | 'number'
+    tipo?: 'text' | 'email' | 'password' | 'number' | 'search'
     disabled?: boolean
     obrigatorio?: boolean
   }>(),
