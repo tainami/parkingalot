@@ -10,7 +10,7 @@ import AppSideBar from './AppSideBar.vue'
 
         <main class="main-content">
             <div class="content-container">
-                <slot />
+                <RouterView />
             </div>
         </main>
     </div>
