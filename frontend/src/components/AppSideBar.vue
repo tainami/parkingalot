@@ -1,5 +1,25 @@
 <script setup lang="ts">
-import {RouterLink} from 'vue-router'
+import {RouterLink, useRouter} from 'vue-router'
+import {ref} from 'vue'
+import api from '@/services/api'
+
+const guarda = JSON.parse(sessionStorage.getItem('guarda') || '{}')
+const router = useRouter()
+const mostrarModal = ref(false)
+
+async function fazerLogout(){
+    
+    try {
+        await api.post('/login/logout')
+    } catch (erro){
+        console.error('Erro ao realizar logout:',erro)
+    } finally{
+        sessionStorage.removeItem('token')
+        sessionStorage.removeItem('guarda')
+        await router.push('/login')
+    }
+
+}
 
 const menuItems=[
     {name: 'Mapa de vagas', path:'/mapa', icon: 'mapa'},
@@ -10,6 +30,7 @@ const menuItems=[
     {name:'Guardas', path:'/guardas', icon:'guardas'},
     {name:'Vagas', path:'/vagas', icon:'vagas'}
 ]
+
 </script>
 
 
@@ -25,7 +46,7 @@ const menuItems=[
                 :key="item.path"
                 :to="item.path"
                 class="menu-item"
-                active-class="active"
+                exact-active-class="active"
             >
                 <svg 
                     v-if="item.icon === 'mapa'" 
@@ -102,14 +123,19 @@ const menuItems=[
 
         <div class="sidebar-footer">
             <div class="user-info">
-                <div class="user-avatar">EX</div>
+                <div class="user-avatar">
+                    <svg viewBox="0 0 24 24" class="user-icon">
+                        <circle cx="12" cy="8" r="4"/>
+                        <path d="M4 21v-2a8 8 0 0 1 16 0v2"/>
+                    </svg>
+                </div>
                 <div class="user-details">
-                    <span class="user-name">Exemplo</span>
+                    <span class="user-name">{{guarda.nome_guarda}}</span>
                     <span class="user-role">Guarda</span>
                 </div>
             </div>       
                 
-            <button class="logout-button">
+            <button class="logout-button" @click="mostrarModal = true">
                 <svg viewBox="0 0 24 24" class="menu-icon">
                     <path d="M10 7l-5 5 5 5"/>
                     <path d="M5 12h10"/>
@@ -120,6 +146,37 @@ const menuItems=[
         </div>
 
     </aside>
+
+    <div v-if="mostrarModal" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-icon">
+                <svg viewBox="0 0 24 24" class="menu-icon">
+                    <path d="M10 7l-5 5 5 5"/>
+                    <path d="M5 12h10"/>
+                    <path d="M12 3h5a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-5"/>
+                </svg>
+            </div>
+            <h2>Deseja realmente sair?</h2>
+            <p>Você precisará entrar novamente para acessar o sistema.</p>
+
+            <div class="modal-actions">
+                <button
+                    class="cancel-button"
+                    @click="mostrarModal = false" 
+                >
+                    Cancelar
+                </button>
+
+                <button
+                    class="confirm-button"
+                    @click="fazerLogout"
+                >
+                    Sair
+                </button>
+            </div>
+        </div>
+
+    </div>
 </template>
 
 <style scoped>
@@ -131,7 +188,7 @@ const menuItems=[
     height: 100%;
     min-height: 100vh;
     padding:24px 16px;
-    background-color: #FFFFFF;
+    background-color: var(--color-surface);
     }
 
 .sidebar-header{
@@ -148,8 +205,8 @@ const menuItems=[
     width: 32px;
     height: 32px;
     border-radius: 9px;
-    background-color: #2879E8;
-    color: #FFFFFF;
+    background-color: var(--color-primary);
+    color: var(--color-surface);
     font-size: 21px;
     font-weight: 700;
 }
@@ -195,8 +252,8 @@ const menuItems=[
 
 .menu-item:hover,
 .menu-item.active{
-    background-color: #2879E8;
-    color: #FFFFFF;
+    background-color: var(--color-primary);
+    color: var(--color-surface);
 }
 
 .menu-item:active{
@@ -216,18 +273,14 @@ const menuItems=[
     margin-bottom: 16px;
 }
 
-.user-avatar{
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    flex-shrink: 0;
-    border-radius: 50%;
-    background-color: #EAF2FF;
-    color: #2879E8;
-    font-size: 12px;
-    font-weight: 700;
+.user-icon{
+    width: 20px;
+    height: 20px;
+    fill:none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 .user-details{
@@ -256,7 +309,7 @@ const menuItems=[
     border: none;
     border-radius: 8px;
     background: transparent;
-    color: #DC2626;
+    color: var(--color-error);
     font-size: 14px;
     cursor: pointer;
     transition: 
@@ -265,12 +318,88 @@ const menuItems=[
 }
 
 .logout-button:hover{
-    background-color: #FEE2E2;
-    color: #DC2626;
+    background-color: var(--color-error-hover);
+    color: var(--color-error);
 }
 
 .logout-button:active{
     transform: scale(1.06);
+}
+
+.modal-overlay{
+    position: fixed;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0,0,0,0.45);
+    z-index: 9999;
+}
+
+.modal-container{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: min(350px, 90%);
+    padding: 24px;
+    border-radius: 14px;
+    background-color: var(--color-surface);
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.modal-icon{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+    border-radius: 50%;
+    background-color: var(--color-error-hover);
+    color: var(--color-error)
+}
+
+.modal-icon .menu-icon{
+    width: 24px;
+    height: 24px;
+}
+
+.modal-container h2{
+    font-size: 18px;
+    margin-bottom: 8px;
+}
+
+.modal-container p{
+    color: #64748B;
+    font-size: 13px;
+    margin-bottom: 24px;
+}
+
+.modal-actions{
+    display: flex;
+    gap: 12px;
+    width: 100%;
+}
+
+.cancel-button, .confirm-button{
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.cancel-button{
+    background-color: #E5E7EB;
+    color: #172554;
+}
+
+.confirm-button{
+    background-color: var(--color-error);
+    color: var(--color-surface);
 }
 
 </style>

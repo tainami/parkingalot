@@ -53,6 +53,7 @@ async function fazerLogin(){
         })
 
         sessionStorage.setItem('token', resposta.data.token)
+        sessionStorage.setItem('guarda', JSON.stringify(resposta.data.guarda))
 
         await router.push('/')
     }
