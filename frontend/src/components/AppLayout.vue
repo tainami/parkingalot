@@ -10,7 +10,11 @@ import AppSideBar from './AppSideBar.vue'
 
         <main class="main-content">
             <div class="content-container">
-                <RouterView />
+                <RouterView v-slot="{Component}">
+                    <Transition name="page" mode="out-in">
+                        <component :is="Component"/>
+                    </Transition>
+                </RouterView>
             </div>
         </main>
     </div>
@@ -56,4 +60,25 @@ import AppSideBar from './AppSideBar.vue'
     box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
 }
 
+.page-enter-active, .page-leave-active{
+    transition: 
+    opacity 0.2s ease, 
+    transform 0.2s ease;
+}
+
+.page-enter-from, .page-leave-to{
+    opacity: 0;
+    transform: translateY(8px);
+}
+
+:deep(.page-enter-active), :deep(.page-leave-active){
+    transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
+}
+
+:deep(.page-enter-from), :deep(.page-leave-to){
+    opacity: 0;
+    transform: translateY(8px);
+}
 </style>
