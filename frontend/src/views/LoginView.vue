@@ -26,7 +26,6 @@ const erroCPF = ref('')
 const erroSenha = ref('')
 
 async function fazerLogin(){
-    console.log('Função fazer login')
     mensagemErro.value = ''
 
     erroCPF.value = ''
@@ -132,7 +131,7 @@ async function fazerLogin(){
                 </form>
                 <p class="login-container-subtitle">
                 Acesso restrito aos guardas. Esqueceu a senha? 
-                <a href="#">Redefinir senha</a></p>
+                <router-link to="/redefinir-senha" class="forgot-password">Redefinir senha</router-link></p>
             </div>
         </div>
 
@@ -157,12 +156,6 @@ async function fazerLogin(){
     align-items: center;
     min-height: 100vh;
     width: 100%;
-}
-
-.screen-elements h1{  
-    font-size: 45px;
-    font-weight: 700;
-    margin-bottom: 16px;
 }
 
 .screen-elements {
@@ -287,16 +280,18 @@ async function fazerLogin(){
 
 .login-container-subtitle a {
     color: var(--color-primary);
+    font-size: 13px;
     text-decoration: none;
-    transition: text-decoration 0.2s ease;
+    transition: color 0.2s ease;
 }
 
 .login-container-subtitle a:hover{
+    color: var(--color-primary-hover);
     text-decoration: underline;
 }
 
 .login-error{
-    color: #DC2626;
+    color: var(--color-error);
     font-size: 13px;
     text-align: center;
 }
@@ -307,13 +302,18 @@ async function fazerLogin(){
 }
 
 .input-error{
-    color: #DC2626;
+    color: var(--color-error);
     font-size: 12px;
     margin-top: 4px;
 }
 
 .input-invalid{
-    border: 1px solid #DC2626 !important
+    border: 1px solid var(--color-error) !important
+}
+
+.forgot-password:hover{
+    color:var(--color-primary-hover);
+    text-decoration: underline;
 }
 
 </style>
