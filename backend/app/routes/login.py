@@ -2,7 +2,7 @@ import secrets
 from functools import wraps
 
 from flask import Blueprint, jsonify, request
-from werkzeug.security import check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from app import db
 from app.models.guarda import Guarda
@@ -65,6 +65,39 @@ def verificar_token():
 
     return guarda
 
+
+@bp.route('/redefinir-senha', methods=['POST'])
+def redefinir_senha():
+    dados = request.get_json()
+
+    cpf = ''.join(filter(str.isdigit, str(dados.get('cpf_guarda'))))
+    nome = dados.get('nome_guarda', '').strip()
+    nova_senha = dados.get('nova_senha', '')
+    confirmar_senha = dados.get('confirmar_senha', '')
+
+    if not cpf or not nome or not nova_senha or not confirmar_senha:
+        return jsonify({'error': 'Preencha todos os campos'}), 400
+
+    if nova_senha != confirmar_senha:
+        return jsonify({'error': 'As senhas não coincidem'}), 400
+
+    if len(nova_senha) < 8:
+        return jsonify({'error': 'A senha deve ter pelo menos 8 caracteres'}), 400
+
+    guarda = Guarda.query.filter_by(cpf_guarda=cpf).first()
+
+    if not guarda or guarda.nome_guarda.strip().casefold() != nome.casefold():
+        return jsonify({'error': 'CPF ou nome não conferem'}), 400
+
+    guarda.senha = generate_password_hash(nova_senha)
+
+    guarda.token = None
+
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Senha redefinida com sucesso'
+    }), 200
 
 def autenticacao_obrigatoria(rota):
     @wraps(rota)
