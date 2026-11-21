@@ -8,6 +8,8 @@
   --color-bg: #f3f5f9;
   --color-surface: #ffffff;
   --color-border: #e6e9ef;
+  --color-error: #dc2626;
+  --color-error-hover: #FEE2E2; 
 
   --radius-md: 8px;
   --control-height: 44px;
