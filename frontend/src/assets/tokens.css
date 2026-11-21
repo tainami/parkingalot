@@ -10,6 +10,15 @@
   --color-border: #e6e9ef;
   --color-error: #dc2626;
   --color-error-hover: #FEE2E2; 
+  --color-text-soft: #3e4855;
+  --color-border-strong: #c9cfd8;
+
+  --color-vaga-livre: #cdd2da;
+  --color-vaga-colaborador: #3b8beb;
+  --color-vaga-terceiro: #f2a33a;
+  --color-corredor: #c3c8d0;
+  --color-aviso-bg: #fff6ea;
+  --color-aviso-text: #7a3b05;
 
   --radius-md: 8px;
   --control-height: 44px;
