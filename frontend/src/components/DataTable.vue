@@ -6,6 +6,12 @@ defineProps<{
     rows: Record<string, any>[]
 }>()
 
+
+defineEmits<{
+    editar: [row: any]
+    excluir: [row: any]
+}>()
+
 </script>
 
 <template>
@@ -26,8 +32,8 @@ defineProps<{
                             {{ row[column] }}
                         </td>
                         <td class="actions">
-                            <EditButton />
-                            <DeleteButton />
+                            <EditButton @click="$emit('editar', row)" />
+                            <DeleteButton @click="$emit('excluir', row)" />
                         </td>
                     </tr>
 
