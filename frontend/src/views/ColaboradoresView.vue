@@ -1,26 +1,33 @@
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import api from '@/services/api'
 import CrudLayout from '@/components/CrudLayout.vue'
 import BaseButton from '@/components/BaseButton.vue'
 import BaseField from '@/components/BaseField.vue'
 import DataTable from '@/components/DataTable.vue'
 
-interface ColaboradorTabela {
-  Matrícula: number
-  Nome: string
-  Veículos: string
-  matriculaCompleta: number
-  setor: string
-  cargo: string
+interface Colaborador {
+    matricula: number
+    nome: string
+    setor: string
+    cargo: string
 }
 
-const columns = ['Matrícula', 'Nome', 'Veículos']
+interface ColaboradorTabela {
+    Matrícula: string
+    Nome: string
+    Setor: string
+    Cargo: string
+    Veículos: string
+    matriculaCompleta: number
+}
+
+const columns = ['Matrícula', 'Nome', 'Setor', 'Cargo', 'Veículos']
 
 const rows = ref<ColaboradorTabela[]>([])
 
 const busca = ref('')
-
 const matricula = ref('')
 const nome = ref('')
 const setor = ref('')
@@ -29,297 +36,385 @@ const cargo = ref('')
 const modoEdicao = ref(false)
 const matriculaOriginal = ref<number | null>(null)
 
-const mensagem = ref('')
-const tipoMensagem = ref<'sucesso' | 'erro' | 'info'>('info')
-
 const modalExclusao = ref(false)
 const colaboradorSelecionado = ref<ColaboradorTabela | null>(null)
 
-const linhasFiltradas = computed(() => {
-  const pesquisa = busca.value.toLowerCase()
+const mensagem = ref('')
+const carregando = ref(false)
 
-  return rows.value.filter((colaborador) =>
-    colaborador.Nome.toLowerCase().includes(pesquisa) ||
-    String(colaborador.Matrícula).includes(pesquisa)
-  )
+const linhasFiltradas = computed(() => {
+    const termo = busca.value
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+
+    return rows.value.filter(colaborador => {
+        const dados = [
+            colaborador.Matrícula,
+            colaborador.Nome,
+            colaborador.Setor,
+            colaborador.Cargo
+        ]
+
+        return dados.some(valor =>
+            valor.toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .includes(termo)
+        )
+    })
 })
 
-function exibirMensagem(
-  texto: string,
-  tipo: 'sucesso' | 'erro' | 'info'
-) {
-  mensagem.value = texto
-  tipoMensagem.value = tipo
+async function listarColaboradores() {
+    carregando.value = true
+
+    try {
+        const resposta = await api.get<Colaborador[]>('/colaboradores/')
+
+        rows.value = resposta.data.map(colaborador => ({
+            Matrícula: String(colaborador.matricula),
+            Nome: colaborador.nome,
+            Setor: colaborador.setor,
+            Cargo: colaborador.cargo,
+            Veículos: '—',
+            matriculaCompleta: colaborador.matricula
+        }))
+    } catch (erro: any) {
+        console.error('Erro ao listar colaboradores:', erro)
+        mensagem.value =
+            erro.response?.data?.erro ||
+            erro.response?.data?.error ||
+            'Não foi possível carregar os colaboradores.'
+    } finally {
+        carregando.value = false
+    }
 }
 
-function limparFormulario() {
-  matricula.value = ''
-  nome.value = ''
-  setor.value = ''
-  cargo.value = ''
+async function cadastrar() {
+    mensagem.value = ''
 
-  modoEdicao.value = false
-  matriculaOriginal.value = null
-}
+    if (modoEdicao.value) {
+        await atualizarColaborador()
+        return
+    }
 
-function validarFormulario(): boolean {
-  if (
-    !matricula.value.trim() ||
-    !nome.value.trim() ||
-    !setor.value.trim() ||
-    !cargo.value.trim()
-  ) {
-    exibirMensagem('Preencha todos os campos.', 'erro')
-    return false
-  }
+    if (!matricula.value.trim() || !nome.value.trim() ||
+        !setor.value.trim() || !cargo.value.trim()) {
+        mensagem.value = 'Preencha todos os campos.'
+        return
+    }
 
-  const numeroMatricula = Number(matricula.value)
+    const matriculaNumerica = Number(matricula.value)
 
-  if (!Number.isInteger(numeroMatricula) || numeroMatricula <= 0) {
-    exibirMensagem('Informe uma matrícula válida.', 'erro')
-    return false
-  }
+    if (!Number.isInteger(matriculaNumerica) || matriculaNumerica <= 0) {
+        mensagem.value = 'Informe uma matrícula válida.'
+        return
+    }
 
-  return true
+    carregando.value = true
+
+    try {
+        await api.post('/colaboradores/', {
+            matricula: matriculaNumerica,
+            nome: nome.value.trim(),
+            setor: setor.value.trim(),
+            cargo: cargo.value.trim()
+        })
+
+        mensagem.value = 'Colaborador cadastrado com sucesso.'
+
+        limparFormulario()
+        await listarColaboradores()
+        mensagem.value = 'Colaborador cadastrado com sucesso.'
+    } catch (erro: any) {
+        console.error('Erro ao cadastrar colaborador:', erro)
+
+        mensagem.value =
+            erro.response?.data?.erro ||
+            erro.response?.data?.error ||
+            'Não foi possível cadastrar o colaborador.'
+    } finally {
+        carregando.value = false
+    }
 }
 
 function editarColaborador(colaborador: ColaboradorTabela) {
-  matricula.value = String(colaborador.matriculaCompleta)
-  nome.value = colaborador.Nome
-  setor.value = colaborador.setor
-  cargo.value = colaborador.cargo
+    mensagem.value = ''
 
-  matriculaOriginal.value = colaborador.matriculaCompleta
-  modoEdicao.value = true
+    modoEdicao.value = true
+    matriculaOriginal.value = colaborador.matriculaCompleta
 
-  mensagem.value = ''
+    matricula.value = colaborador.Matrícula
+    nome.value = colaborador.Nome
+    setor.value = colaborador.Setor
+    cargo.value = colaborador.Cargo
+
+    mensagem.value = 'Editando os dados do colaborador.'
+}
+
+async function atualizarColaborador() {
+    if (!matriculaOriginal.value) return
+
+    if (!nome.value.trim() || !setor.value.trim() || !cargo.value.trim()) {
+        mensagem.value = 'Preencha todos os campos.'
+        return
+    }
+
+    carregando.value = true
+
+    try {
+        await api.put(`/colaboradores/${matriculaOriginal.value}`, {
+            nome: nome.value.trim(),
+            setor: setor.value.trim(),
+            cargo: cargo.value.trim()
+        })
+
+        limparFormulario()
+        await listarColaboradores()
+        mensagem.value = 'Colaborador atualizado com sucesso.'
+    } catch (erro: any) {
+        console.error('Erro ao atualizar colaborador:', erro)
+
+        mensagem.value =
+            erro.response?.data?.erro ||
+            erro.response?.data?.error ||
+            'Não foi possível atualizar o colaborador.'
+    } finally {
+        carregando.value = false
+    }
 }
 
 function excluirColaborador(colaborador: ColaboradorTabela) {
-  colaboradorSelecionado.value = colaborador
-  modalExclusao.value = true
+    colaboradorSelecionado.value = colaborador
+    modalExclusao.value = true
 }
 
 function cancelarExclusao() {
-  modalExclusao.value = false
-  colaboradorSelecionado.value = null
+    modalExclusao.value = false
+    colaboradorSelecionado.value = null
 }
 
-function salvar() {
-  if (!validarFormulario()) return
+async function confirmarExclusao() {
+    if (!colaboradorSelecionado.value) return
 
-  exibirMensagem(
-    'A integração com o backend ainda não foi realizada.',
-    'info'
-  )
+    carregando.value = true
+
+    try {
+        await api.delete(
+            `/colaboradores/${colaboradorSelecionado.value.matriculaCompleta}`
+        )
+
+        cancelarExclusao()
+        limparFormulario()
+        await listarColaboradores()
+        mensagem.value = 'Colaborador excluído com sucesso.'
+    } catch (erro: any) {
+        console.error('Erro ao excluir colaborador:', erro)
+
+        mensagem.value =
+            erro.response?.data?.erro ||
+            erro.response?.data?.error ||
+            'Não foi possível excluir o colaborador.'
+
+        cancelarExclusao()
+    } finally {
+        carregando.value = false
+    }
 }
 
-function confirmarExclusao() {
-  modalExclusao.value = false
-  colaboradorSelecionado.value = null
+function limparFormulario() {
+    matricula.value = ''
+    nome.value = ''
+    setor.value = ''
+    cargo.value = ''
 
-  exibirMensagem(
-    'A integração com o backend ainda não foi realizada.',
-    'info'
-  )
+    modoEdicao.value = false
+    matriculaOriginal.value = null
+    mensagem.value = ''
 }
+
+onMounted(() => {
+    listarColaboradores()
+})
 </script>
 
 <template>
-  <CrudLayout
-    titulo="Colaboradores"
-    subtitulo="Gerencie os colaboradores cadastrados no sistema."
-    tituloFormulario="Cadastro de colaborador"
-    placeholderBusca="Buscar por nome ou matrícula..."
-    v-model:busca="busca"
-  >
-    <template #tabela>
-      <DataTable
-        :columns="columns"
-        :rows="linhasFiltradas"
-        :mostrar-excluir="true"
-        @editar="editarColaborador"
-        @excluir="excluirColaborador"
-      />
-    </template>
+    <CrudLayout
+        v-model:busca="busca"
+        titulo="Colaboradores"
+        subtitulo="Gerenciamento dos colaboradores cadastrados no estacionamento"
+        :titulo-formulario="modoEdicao ? 'Editar colaborador' : 'Novo colaborador'"
+        placeholder-busca="Nome, matrícula, setor ou cargo"
+    >
+        <template #tabela>
+            <DataTable
+                :columns="columns"
+                :rows="linhasFiltradas"
+                :mostrar-excluir="true"
+                @editar="editarColaborador"
+                @excluir="excluirColaborador"
+            />
+        </template>
 
-    <template #formulario>
-      <form @submit.prevent="salvar">
-        <BaseField
-          v-model="matricula"
-          rotulo="Matrícula"
-          placeholder="Digite a matrícula"
-          tipo="text"
-          obrigatorio
-        />
+        <template #formulario>
+            <form @submit.prevent="cadastrar">
+                <BaseField
+                    v-model="matricula"
+                    rotulo="Matrícula"
+                    placeholder="Número da matrícula"
+                    tipo="number"
+                    :disabled="modoEdicao"
+                    obrigatorio
+                />
 
-        <BaseField
-          v-model="nome"
-          rotulo="Nome completo"
-          placeholder="Digite o nome completo"
-          tipo="text"
-          obrigatorio
-        />
+                <BaseField
+                    v-model="nome"
+                    rotulo="Nome completo"
+                    placeholder="Nome do colaborador"
+                    obrigatorio
+                />
 
-        <BaseField
-          v-model="setor"
-          rotulo="Setor"
-          placeholder="Digite o setor"
-          tipo="text"
-          obrigatorio
-        />
+                <BaseField
+                    v-model="setor"
+                    rotulo="Setor"
+                    placeholder="Setor do colaborador"
+                    obrigatorio
+                />
 
-        <BaseField
-          v-model="cargo"
-          rotulo="Cargo"
-          placeholder="Digite o cargo"
-          tipo="text"
-          obrigatorio
-        />
+                <BaseField
+                    v-model="cargo"
+                    rotulo="Cargo"
+                    placeholder="Cargo do colaborador"
+                    obrigatorio
+                />
 
-        <div class="botoes-formulario">
-          <BaseButton @click="salvar">
-            {{ modoEdicao ? 'Salvar alterações' : 'Cadastrar colaborador' }}
-          </BaseButton>
+                <p
+                    v-if="mensagem"
+                    :class="mensagem.includes('sucesso')
+                        ? 'mensagem-sucesso'
+                        : mensagem.includes('Editando')
+                            ? 'mensagem-info'
+                            : 'mensagem-erro'"
+                >
+                    {{ mensagem }}
+                </p>
 
-          <button
-            v-if="modoEdicao"
-            type="button"
-            class="botao-cancelar"
-            @click="limparFormulario"
-          >
-            Cancelar edição
-          </button>
+                <div class="form-actions">
+                    <BaseButton
+                        variante="primario"
+                        :disabled="carregando"
+                        @click="cadastrar"
+                    >
+                        {{ modoEdicao ? 'Salvar alterações' : 'Cadastrar colaborador' }}
+                    </BaseButton>
+
+                    <BaseButton
+                        variante="secundario"
+                        :disabled="carregando"
+                        @click="limparFormulario"
+                    >
+                        Limpar
+                    </BaseButton>
+                </div>
+            </form>
+        </template>
+    </CrudLayout>
+
+    <div v-if="modalExclusao" class="modal-overlay">
+        <div class="modal">
+            <h3>Excluir colaborador</h3>
+
+            <p>
+                Deseja realmente excluir
+                <strong>{{ colaboradorSelecionado?.Nome }}</strong>?
+            </p>
+
+            <div class="modal-actions">
+                <BaseButton
+                    variante="secundario"
+                    @click="cancelarExclusao"
+                >
+                    Cancelar
+                </BaseButton>
+
+                <BaseButton
+                    variante="primario"
+                    :disabled="carregando"
+                    @click="confirmarExclusao"
+                >
+                    Excluir
+                </BaseButton>
+            </div>
         </div>
-      </form>
-
-      <p
-        v-if="mensagem"
-        class="mensagem"
-        :class="`mensagem-${tipoMensagem}`"
-      >
-        {{ mensagem }}
-      </p>
-    </template>
-  </CrudLayout>
-
-  <div v-if="modalExclusao" class="modal-fundo">
-    <div class="modal">
-      <h2>Excluir colaborador</h2>
-
-      <p>
-        Tem certeza que deseja excluir
-        <strong>{{ colaboradorSelecionado?.Nome }}</strong>?
-      </p>
-
-      <div class="modal-botoes">
-        <button
-          type="button"
-          class="botao-cancelar"
-          @click="cancelarExclusao"
-        >
-          Cancelar
-        </button>
-
-        <button
-          type="button"
-          class="botao-excluir"
-          @click="confirmarExclusao"
-        >
-          Confirmar exclusão
-        </button>
-      </div>
     </div>
-  </div>
 </template>
 
 <style scoped>
 form {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
 }
 
-.botoes-formulario {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 8px;
+.form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
 }
 
-.botao-cancelar,
-.botao-excluir {
-  padding: 10px 14px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.botao-cancelar {
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  color: var(--color-text);
-}
-
-.mensagem {
-  margin: 12px 0 0;
-  font-size: 13px;
+.form-actions button:first-child {
+    flex: 1;
 }
 
 .mensagem-sucesso {
-  color: #16803c;
+    color: #15803d;
+    font-size: 12px;
 }
 
 .mensagem-erro {
-  color: #d32f2f;
+    color: var(--color-error);
+    font-size: 12px;
 }
 
 .mensagem-info {
-  color: var(--color-text-muted);
+    color: var(--color-primary);
+    font-size: 12px;
 }
 
-.modal-fundo {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  background: rgba(0, 0, 0, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 16px;
 }
 
 .modal {
-  width: 100%;
-  max-width: 400px;
-  padding: 24px;
-  border-radius: 12px;
-  background: var(--color-surface);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
+    width: 90%;
+    max-width: 400px;
+    padding: 24px;
+    background: var(--color-surface);
+    border-radius: 10px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
-.modal h2 {
-  margin: 0 0 12px;
-  color: var(--color-text);
-  font-size: 18px;
+.modal h3 {
+    margin: 0 0 12px;
+    color: var(--color-text);
 }
 
 .modal p {
-  color: var(--color-text-muted);
-  font-size: 14px;
-  line-height: 1.5;
+    color: var(--color-text-muted);
+    font-size: 14px;
 }
 
-.modal-botoes {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 22px;
-}
-
-.botao-excluir {
-  border: none;
-  background: #d32f2f;
-  color: white;
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 24px;
 }
 </style>
