@@ -91,10 +91,20 @@ def criar():
     if registro_aberto is not None:
         return jsonify({"error": "Veículo já possui um registro em aberto"}), 409
 
+    vagas_livres = db.session.execute(
+        db.select(Vaga).where(Vaga.status_vaga.is_(False))
+    ).scalars().first()
+
+    if vagas_livres is None:
+        return jsonify({"error": "Estacionamento cheio"}), 409
+
     resultado = db.session.execute(
         db.update(Vaga)
         .where(Vaga.numero == dados["numero_vaga"], Vaga.status_vaga.is_(False))
-        .values(status_vaga=True)
+        .values(
+            status_vaga = True,
+            tipo_vaga = veiculo.tipo_vinculo
+        )
     )
     if resultado.rowcount == 0:
         return jsonify({"error": "Vaga já ocupada"}), 409
@@ -133,6 +143,7 @@ def saida(id_registro):
         return jsonify({"error": "Vaga não encontrada"}), 404
 
     vaga.status_vaga = False
+    vaga.tipo_vaga = "COLABORADOR"
     db.session.commit()
     return jsonify(registro.to_dict()), 200
 
@@ -152,10 +163,27 @@ def atualizar(id_registro):
     dados = request.get_json(silent=True) or {}
 
     if "placa" in dados:
-        if db.session.get(Veiculo, dados["placa"]) is None:
+        veiculo = db.session.get(Veiculo, dados["placa"])
+
+        if veiculo is None:
             return jsonify({"error": "Veículo não encontrado"}), 404
 
+        outro_registro = db.session.execute(
+            db.select(Registro).where(
+                Registro.placa == dados["placa"],
+                Registro.data_saida.is_(None),
+                Registro.id_registro != id_registro
+            )
+        ).scalar_one_or_none()
+
+        if outro_registro is not None:
+            return jsonify({"error": "Veículo já possui um registro em aberto"}), 409
+
         registro.placa = dados["placa"]
+
+    else:
+        veiculo = db.session.get(Veiculo, registro.placa)
+
 
     if "numero_vaga" in dados:
         vaga_nova = db.session.get(Vaga, dados["numero_vaga"])
@@ -166,13 +194,21 @@ def atualizar(id_registro):
         if vaga_nova.status_vaga and vaga_nova.numero != registro.numero_vaga:
             return jsonify({"error": "Vaga já ocupada"}), 409
 
-        vaga_antiga = db.session.get(Vaga, registro.numero_vaga)
+        if registro.data_saida is None:
+            vaga_antiga = db.session.get(Vaga, registro.numero_vaga)
 
-        if vaga_antiga:
-            vaga_antiga.status_vaga = False
-        vaga_nova.status_vaga = True
+            if vaga_antiga and vaga_antiga.numero != vaga_nova.numero:
+                vaga_antiga.status_vaga = False
+                vaga_antiga.tipo_vaga = "COLABORADOR"
+
+            vaga_nova.status_vaga = True
+            vaga_nova.tipo_vaga = veiculo.tipo_vinculo
 
         registro.numero_vaga = dados["numero_vaga"]
+
+    elif "placa" in dados and registro.data_saida is None:
+        vaga = db.session.get(Vaga, registro.numero_vaga)
+        vaga.tipo_vaga = veiculo.tipo_vinculo
 
     db.session.commit()
 
@@ -190,6 +226,13 @@ def deletar(id_registro):
 
     if registro is None:
         return jsonify({"error": "Registro não encontrado"}), 404
+
+    if registro.data_saida is None:
+        vaga = db.session.get(Vaga, registro.numero_vaga)
+
+        if vaga is not None:
+            vaga.status_vaga = False
+            vaga.tipo_vaga = "COLABORADOR"
 
     db.session.delete(registro)
     db.session.commit()
