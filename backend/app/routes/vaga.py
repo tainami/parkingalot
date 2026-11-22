@@ -27,26 +27,23 @@ def buscar_vaga(numero):
 @autenticacao_obrigatoria
 def criar_vaga():
     dados = request.get_json(silent=True) or {}
-    campos_obrigatorios = ["numero", "tipo_vaga"]
 
-    faltando = [campo for campo in campos_obrigatorios if campo not in dados]
-    if faltando:
-        return jsonify(
-            {"error": f"Campos obrigatórios não preenchidos: {', '.join(faltando)}"}
-        ), 400
-
-    if dados["tipo_vaga"] not in ["COLABORADOR", "TERCEIRO"]:
-        return jsonify({"error": "Tipo de vaga inválido"}), 400
+    if 'numero' not in dados:
+        return jsonify({"error": "Informe o número da vaga"}), 400
 
     if db.session.get(Vaga, dados["numero"]) is not None:
         return jsonify({"error": "Vaga já existe"}), 409
 
-    vaga = Vaga(numero=dados["numero"], tipo_vaga=dados["tipo_vaga"])
+    vaga = Vaga(
+       numero=dados["numero"],
+       tipo_vaga="COLABORADOR"
+   )
 
     db.session.add(vaga)
     db.session.commit()
 
     return jsonify(vaga.to_dict()), 201
+                      
 
 
 @bp.route("/<int:numero>", methods=["PUT"])
@@ -59,11 +56,19 @@ def atualizar_vaga(numero):
 
     dados = request.get_json(silent=True) or {}
 
-    if "tipo_vaga" in dados:
-        if dados["tipo_vaga"] not in ["COLABORADOR", "TERCEIRO"]:
-            return jsonify({"error": "Tipo de vaga inválido"}), 400
-        vaga.tipo_vaga = dados["tipo_vaga"]
+    if "numero" not in dados:
+        return jsonify({"error":"Informe o novo número da vaga"}), 400
 
+    novo_numero = dados["numero"]
+
+    if not isinstance(novo_numero, int) or isinstance(novo_numero, bool) or novo_numero <=0:
+        return jsonify({"error":"Número da vaga inválido"}), 400
+
+    if novo_numero != numero and db.session.get(Vaga, novo_numero) is not None:
+        return jsonify({"error":"Já existe uma vaga com esse número"}), 409
+
+    vaga.numero = novo_numero
+    
     db.session.commit()
 
     return jsonify(vaga.to_dict())

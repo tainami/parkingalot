@@ -496,4 +496,37 @@ form{
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
+.form-group label{
+    font: 500 13px var(--font-family);
+    color: var(--color-text);
+}
+
+.form-group select{
+    width: 100%;
+    padding: 11px 36px 11px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    font: 400 13px var(--font-family);
+    color: var(--color-text);
+    background-color: var(--color-surface);
+    cursor: pointer;
+    outline: none;
+    appearance: none;
+
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+}
+
+.form-group select:focus,
+.form-group select:hover{
+    border-color: var(--color-primary);
+}
+
+.form-group select option{
+    background: var(--color-surface);
+    color: var(--color-text);
+    padding: 10px;
+}
+
 </style>

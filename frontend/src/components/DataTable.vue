@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import EditButton from './EditButton.vue'
 import DeleteButton from './DeleteButton.vue'
+
 defineProps<{
     columns: string[]
     rows: Record<string, any>[]
+    mostrarExcluir?:boolean
 }>()
 
 
@@ -29,11 +31,25 @@ defineEmits<{
                 <tbody>
                     <tr v-for="(row, index) in rows" :key="index">
                         <td v-for="column in columns" :key="column">
-                            {{ row[column] }}
+                            <span
+                                v-if="column === 'Status' && ['Ocupada', 'Livre'].includes(row[column])"
+                                :class="[
+                                    'status-badge',
+                                   row[column] === 'Ocupada' ? 'status-ocupada' : 'status-livre'
+                                ]"
+                            >
+                                {{ row[column] }}
+                            </span>
+
+                            <template v-else>
+                                {{ row[column === 'Número' ? 'Numero' : column] }}
+                            </template>
                         </td>
                         <td class="actions">
                             <EditButton @click="$emit('editar', row)" />
-                            <DeleteButton @click="$emit('excluir', row)" />
+                            <DeleteButton
+                             v-if="mostrarExcluir !==false"
+                             @click="$emit('excluir', row)" />
                         </td>
                     </tr>
 
@@ -89,6 +105,27 @@ defineEmits<{
     color: #64748B;
 }
 
+.status-badge{
+
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.status-ocupada{
+    background-color: #F1F3F5;
+    border-color: #d1d5d8;
+    color: #4b5563;
+}
+
+.status-livre{
+    background-color: #eff6ff;
+    border-color: #bfd8fe;
+    color: var(--color-primary)
+}
 
 
 </style>
