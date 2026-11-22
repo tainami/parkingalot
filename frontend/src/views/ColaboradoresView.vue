@@ -17,25 +17,7 @@ interface ColaboradorTabela {
 
 const columns = ['Matrícula', 'Nome', 'Veículos']
 
-// Dados fictícios para testar a interface
-const rows = ref<ColaboradorTabela[]>([
-  {
-    Matrícula: 1,
-    Nome: 'Bianca Borba',
-    Veículos: '2 veículos',
-    matriculaCompleta: 1,
-    setor: 'Administrativo',
-    cargo: 'Assistente'
-  },
-  {
-    Matrícula: 2,
-    Nome: 'Maria Santos',
-    Veículos: '1 veículo',
-    matriculaCompleta: 2,
-    setor: 'Financeiro',
-    cargo: 'Analista'
-  }
-])
+const rows = ref<ColaboradorTabela[]>([])
 
 const busca = ref('')
 
@@ -53,7 +35,6 @@ const tipoMensagem = ref<'sucesso' | 'erro' | 'info'>('info')
 const modalExclusao = ref(false)
 const colaboradorSelecionado = ref<ColaboradorTabela | null>(null)
 
-// Pesquisa na tabela
 const linhasFiltradas = computed(() => {
   const pesquisa = busca.value.toLowerCase()
 
@@ -63,7 +44,6 @@ const linhasFiltradas = computed(() => {
   )
 })
 
-// Exibe mensagens
 function exibirMensagem(
   texto: string,
   tipo: 'sucesso' | 'erro' | 'info'
@@ -72,7 +52,6 @@ function exibirMensagem(
   tipoMensagem.value = tipo
 }
 
-// Limpa o formulário
 function limparFormulario() {
   matricula.value = ''
   nome.value = ''
@@ -83,7 +62,6 @@ function limparFormulario() {
   matriculaOriginal.value = null
 }
 
-// Valida os campos
 function validarFormulario(): boolean {
   if (
     !matricula.value.trim() ||
@@ -105,36 +83,6 @@ function validarFormulario(): boolean {
   return true
 }
 
-// Cadastra colaborador
-function cadastrar() {
-  if (!validarFormulario()) return
-
-  const numeroMatricula = Number(matricula.value)
-
-  const jaExiste = rows.value.some(
-    (colaborador) =>
-      colaborador.matriculaCompleta === numeroMatricula
-  )
-
-  if (jaExiste) {
-    exibirMensagem('Já existe um colaborador com essa matrícula.', 'erro')
-    return
-  }
-
-  rows.value.push({
-    Matrícula: numeroMatricula,
-    Nome: nome.value.trim(),
-    Veículos: '—',
-    matriculaCompleta: numeroMatricula,
-    setor: setor.value.trim(),
-    cargo: cargo.value.trim()
-  })
-
-  limparFormulario()
-  exibirMensagem('Colaborador cadastrado com sucesso!', 'sucesso')
-}
-
-// Carrega os dados para edição
 function editarColaborador(colaborador: ColaboradorTabela) {
   matricula.value = String(colaborador.matriculaCompleta)
   nome.value = colaborador.Nome
@@ -147,97 +95,33 @@ function editarColaborador(colaborador: ColaboradorTabela) {
   mensagem.value = ''
 }
 
-// Atualiza colaborador
-function atualizarColaborador() {
-  if (!validarFormulario()) return
-
-  const numeroMatricula = Number(matricula.value)
-
-  const matriculaDuplicada = rows.value.some(
-    (colaborador) =>
-      colaborador.matriculaCompleta === numeroMatricula &&
-      colaborador.matriculaCompleta !== matriculaOriginal.value
-  )
-
-  if (matriculaDuplicada) {
-    exibirMensagem('Já existe um colaborador com essa matrícula.', 'erro')
-    return
-  }
-
-  const indice = rows.value.findIndex(
-    (colaborador) =>
-      colaborador.matriculaCompleta === matriculaOriginal.value
-  )
-
-  if (indice === -1) {
-    exibirMensagem('Colaborador não encontrado.', 'erro')
-    return
-  }
-
-  const colaboradorAtual = rows.value[indice]
-
-  if (!colaboradorAtual) {
-    exibirMensagem('Colaborador não encontrado.', 'erro')
-    return
-  }
-
-  rows.value.splice(indice, 1, {
-    Matrícula: numeroMatricula,
-    Nome: nome.value.trim(),
-    Veículos: colaboradorAtual.Veículos,
-    matriculaCompleta: numeroMatricula,
-    setor: setor.value.trim(),
-    cargo: cargo.value.trim()
-  })
-
-  limparFormulario()
-  exibirMensagem('Colaborador atualizado com sucesso!', 'sucesso')
-}
-
-// Decide entre cadastrar e atualizar
-function salvar() {
-  if (modoEdicao.value) {
-    atualizarColaborador()
-  } else {
-    cadastrar()
-  }
-}
-
-// Abre a confirmação de exclusão
 function excluirColaborador(colaborador: ColaboradorTabela) {
   colaboradorSelecionado.value = colaborador
   modalExclusao.value = true
 }
 
-// Confirma a exclusão
-function confirmarExclusao() {
-  const selecionado = colaboradorSelecionado.value
-
-  if (!selecionado) return
-
-  const indice = rows.value.findIndex(
-    (colaborador) =>
-      colaborador.matriculaCompleta === selecionado.matriculaCompleta
-  )
-
-  if (indice !== -1) {
-    rows.value.splice(indice, 1)
-  }
-
-  if (matriculaOriginal.value === selecionado.matriculaCompleta) {
-    limparFormulario()
-  }
-
-  modalExclusao.value = false
-  colaboradorSelecionado.value = null
-
-  exibirMensagem('Colaborador excluído com sucesso!', 'sucesso')
-}
-
-// Cancela a exclusão
 function cancelarExclusao() {
   modalExclusao.value = false
   colaboradorSelecionado.value = null
+}
+
+function salvar() {
+  if (!validarFormulario()) return
+
+  exibirMensagem(
+    'A integração com o backend ainda não foi realizada.',
+    'info'
+  )
+}
+
+function confirmarExclusao() {
+  modalExclusao.value = false
+  colaboradorSelecionado.value = null
+
+  exibirMensagem(
+    'A integração com o backend ainda não foi realizada.',
+    'info'
+  )
 }
 </script>
 
@@ -319,7 +203,6 @@ function cancelarExclusao() {
     </template>
   </CrudLayout>
 
-  <!-- Modal de confirmação -->
   <div v-if="modalExclusao" class="modal-fundo">
     <div class="modal">
       <h2>Excluir colaborador</h2>
