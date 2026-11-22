@@ -1,5 +1,16 @@
+<script setup lang="ts">
+
+defineEmits<{
+    click: []
+}>()
+
+</script>
+
 <template>
-    <button class="icon-button edit-button" type="button" title="Editar">
+    <button class="icon-button edit-button" 
+            type="button"  
+            title="Editar"
+            @click="$emit('click')">
         <svg
             viewBox="0 0 24 24"
             class="button-icon"

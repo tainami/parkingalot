@@ -12,7 +12,12 @@ const router = createRouter({
         {
           path: '',
           component: () => import('@/views/MapaView.vue')
+        },
+        {
+          path: '/guardas',
+          component:()=>import('@/views/GuardasView.vue')
         }
+
       ]
     },
     {
@@ -23,7 +28,6 @@ const router = createRouter({
       path: '/redefinir-senha',
       component: () => import('@/views/RedefinirSenhaView.vue')
     }
-
   ],
 
 })
