@@ -30,6 +30,15 @@ const router = createRouter({
           component: () => import('@/views/VagasView.vue')
         },
         {
+          path: '/entrada',
+          component: () => import('@/views/EntradaView.vue')
+        },
+        {
+          path: '/saida/:idRegistro',
+          component: () => import('@/views/SaidaView.vue'),
+          props: (rota) => ({ idRegistro: Number(rota.params.idRegistro) })
+        },
+        {
           path: '/registros',
           component: () => import('@/views/RegistrosView.vue')
         },

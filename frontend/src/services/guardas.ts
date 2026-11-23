@@ -10,3 +10,8 @@ export async function listarGuardas() {
   const { data } = await api.get<Guarda[]>('/guardas/')
   return data
 }
+
+export async function buscarGuarda(cpf: string) {
+  const { data } = await api.get<Guarda>(`/guardas/${cpf}`)
+  return data
+}

@@ -20,8 +20,8 @@ withDefaults(
 
 defineEmits<{
   limparSelecao: []
-  registrarEntrada: [codigo: string]
-  registrarSaida: [codigo: string]
+  registrarEntrada: [numero: number]
+  registrarSaida: [numero: number]
 }>()
 </script>
 
@@ -42,7 +42,7 @@ defineEmits<{
           <button type="button" class="limpar" @click="$emit('limparSelecao')">Limpar seleção</button>
         </div>
         <div class="linha titulo">
-          <p class="destaque">Vaga {{ vaga.codigo }}</p>
+          <p class="destaque">Vaga {{ vaga.numero }}</p>
           <StatusPill
             :texto="vaga.estado === 'livre' ? 'Livre' : 'Ocupada'"
             :variante="vaga.estado === 'livre' ? 'cinza' : 'azul-claro'"
@@ -68,14 +68,14 @@ defineEmits<{
         <p v-if="vaga.estado === 'terceiro'" class="aviso">
           Veículo de terceiro: o pagamento é calculado automaticamente ao registrar a saída.
         </p>
-        <BaseButton variante="contorno" class="largo" @click="$emit('registrarSaida', vaga.codigo)">
+        <BaseButton variante="contorno" class="largo" @click="$emit('registrarSaida', vaga.numero)">
           Registrar saída
         </BaseButton>
       </template>
 
       <template v-else>
         <p class="texto">Esta vaga está disponível. Registre a entrada de um veículo para ocupá-la.</p>
-        <BaseButton variante="contorno" class="largo" @click="$emit('registrarEntrada', vaga.codigo)">
+        <BaseButton variante="contorno" class="largo" @click="$emit('registrarEntrada', vaga.numero)">
           Registrar entrada
         </BaseButton>
       </template>

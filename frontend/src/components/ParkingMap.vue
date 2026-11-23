@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, useTemplateRef, watch } from 'vue'
 import ParkingSpot from '@/components/ParkingSpot.vue'
 import type { FiltroVagas, VagaMapa } from '@/types/mapa'
 
@@ -7,55 +7,36 @@ const props = withDefaults(
   defineProps<{
     vagas: VagaMapa[]
     filtro?: FiltroVagas
+    vagasPorFileira?: number
   }>(),
   {
     filtro: 'todas',
+    vagasPorFileira: 8,
   },
 )
 
-const selecionada = defineModel<string | null>('selecionada', { default: null })
+const selecionada = defineModel<number | null>('selecionada', { default: null })
 
-function separarCodigo(codigo: string) {
-  const [, fileira = '', coluna = ''] = codigo.match(/^([A-Za-z]+)(\d+)$/) ?? []
-  return { fileira: fileira.toUpperCase(), coluna }
-}
+const vagasPorNumero = computed(() => new Map(props.vagas.map((v) => [v.numero, v])))
 
-const vagasPorCodigo = computed(() => new Map(props.vagas.map((v) => [v.codigo.toUpperCase(), v])))
+const gradeColunas = computed(() => `repeat(${props.vagasPorFileira}, minmax(48px, 1fr))`)
 
-const fileiras = computed(() =>
-  [...new Set(props.vagas.map((v) => separarCodigo(v.codigo).fileira))].filter(Boolean).sort(),
-)
+type Celula = { tipo: 'vaga'; vaga: VagaMapa } | { tipo: 'vazio' }
 
-const colunas = computed(() =>
-  [...new Set(props.vagas.map((v) => separarCodigo(v.codigo).coluna))]
-    .filter(Boolean)
-    .sort((a, b) => Number(a) - Number(b)),
-)
+const linhas = computed(() => {
+  const ordenadas = [...props.vagas].sort((a, b) => a.numero - b.numero)
+  const resultado: Celula[][] = []
 
-const metade = computed(() => Math.ceil(colunas.value.length / 2))
-const ladoEsquerdo = computed(() => colunas.value.slice(0, metade.value))
-const ladoDireito = computed(() => colunas.value.slice(metade.value))
+  for (let i = 0; i < ordenadas.length; i += props.vagasPorFileira) {
+    const fileira: Celula[] = ordenadas
+      .slice(i, i + props.vagasPorFileira)
+      .map((vaga) => ({ tipo: 'vaga', vaga }))
+    while (fileira.length < props.vagasPorFileira) fileira.push({ tipo: 'vazio' })
+    resultado.push(fileira)
+  }
 
-const gradeColunas = computed(
-  () => `24px repeat(${ladoEsquerdo.value.length}, 62px) 40px repeat(${ladoDireito.value.length}, 62px)`,
-)
-
-type Celula = { tipo: 'vaga'; vaga: VagaMapa } | { tipo: 'vazio' } | { tipo: 'corredor' }
-
-const linhas = computed(() =>
-  fileiras.value.map((fileira) => {
-    const celula = (coluna: string): Celula => {
-      const vaga = vagasPorCodigo.value.get(`${fileira}${coluna}`)
-      return vaga ? { tipo: 'vaga', vaga } : { tipo: 'vazio' }
-    }
-    const celulas: Celula[] = [
-      ...ladoEsquerdo.value.map(celula),
-      { tipo: 'corredor' },
-      ...ladoDireito.value.map(celula),
-    ]
-    return { fileira, celulas }
-  }),
-)
+  return resultado
+})
 
 function estaOculta(vaga: VagaMapa) {
   if (props.filtro === 'todas') return false
@@ -63,55 +44,53 @@ function estaOculta(vaga: VagaMapa) {
   return props.filtro === 'livre' ? !livre : livre
 }
 
-function alternar(codigo: string) {
-  selecionada.value = selecionada.value === codigo ? null : codigo
+function alternar(numero: number) {
+  selecionada.value = selecionada.value === numero ? null : numero
 }
 
-watch([() => props.filtro, vagasPorCodigo], () => {
-  if (!selecionada.value) return
-  const vaga = vagasPorCodigo.value.get(selecionada.value.toUpperCase())
+watch([() => props.filtro, vagasPorNumero], () => {
+  if (selecionada.value === null) return
+  const vaga = vagasPorNumero.value.get(selecionada.value)
   if (!vaga || estaOculta(vaga)) selecionada.value = null
 })
 
 function aoTeclar(evento: KeyboardEvent) {
-  if (evento.key !== 'Escape' || !selecionada.value || evento.defaultPrevented) return
+  if (evento.key !== 'Escape' || selecionada.value === null || evento.defaultPrevented) return
   selecionada.value = null
 }
 
 onMounted(() => window.addEventListener('keydown', aoTeclar))
 onBeforeUnmount(() => window.removeEventListener('keydown', aoTeclar))
+
+const mapa = useTemplateRef<HTMLDivElement>('mapa')
+
+function focarVaga(numero: number) {
+  mapa.value?.querySelector<HTMLButtonElement>(`[aria-label="Vaga ${numero}"]`)?.focus()
+}
+
+defineExpose({ focarVaga })
 </script>
 
 <template>
-  <div class="mapa">
+  <div ref="mapa" class="mapa">
     <div class="grade">
-      <div class="linha cabecalho" :style="{ gridTemplateColumns: gradeColunas }">
-        <span />
-        <span v-for="c in ladoEsquerdo" :key="c">{{ c }}</span>
-        <span />
-        <span v-for="c in ladoDireito" :key="c">{{ c }}</span>
-      </div>
-
       <div
-        v-for="linha in linhas"
-        :key="linha.fileira"
+        v-for="(linha, indice) in linhas"
+        :key="indice"
         class="linha"
         :style="{ gridTemplateColumns: gradeColunas }"
       >
-        <span class="rotulo">{{ linha.fileira }}</span>
-
-        <template v-for="(celula, i) in linha.celulas" :key="i">
+        <template v-for="(celula, i) in linha" :key="i">
           <ParkingSpot
             v-if="celula.tipo === 'vaga'"
-            :codigo="celula.vaga.codigo"
+            :numero="celula.vaga.numero"
             :estado="celula.vaga.estado"
-            :selecionada="selecionada === celula.vaga.codigo"
-            :esmaecida="!!selecionada && selecionada !== celula.vaga.codigo"
+            :selecionada="selecionada === celula.vaga.numero"
+            :esmaecida="selecionada !== null && selecionada !== celula.vaga.numero"
             :oculta="estaOculta(celula.vaga)"
             @click="alternar"
           />
-          <span v-else-if="celula.tipo === 'corredor'" class="corredor" aria-hidden="true" />
-          <span v-else />
+          <span v-else aria-hidden="true" />
         </template>
       </div>
     </div>
@@ -124,7 +103,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', aoTeclar))
 }
 
 .grade {
-  width: max-content;
+  min-width: max-content;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -134,23 +113,5 @@ onBeforeUnmount(() => window.removeEventListener('keydown', aoTeclar))
   display: grid;
   gap: 8px;
   align-items: center;
-}
-
-.cabecalho,
-.rotulo {
-  color: var(--color-text-muted);
-  font: 500 12px var(--font-family);
-  text-align: center;
-}
-
-.cabecalho {
-  height: 20px;
-}
-
-.corredor {
-  width: 1.5px;
-  height: 52px;
-  margin: -4px auto;
-  background: var(--color-corredor);
 }
 </style>

@@ -13,3 +13,18 @@ export async function listarRegistros(filtros: { data?: string } = {}) {
   const { data } = await api.get<Registro[]>('/registros/', { params: filtros })
   return data
 }
+
+export async function registrarEntrada(numeroVaga: number, placa: string) {
+  const { data } = await api.post<Registro>('/registros/', { numero_vaga: numeroVaga, placa })
+  return data
+}
+
+export async function registrarSaida(idRegistro: number) {
+  const { data } = await api.put<Registro>(`/registros/${idRegistro}/saida`)
+  return data
+}
+
+export async function buscarRegistro(idRegistro: number) {
+  const { data } = await api.get<Registro>(`/registros/${idRegistro}`)
+  return data
+}

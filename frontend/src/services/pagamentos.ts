@@ -14,3 +14,11 @@ export async function listarPagamentos() {
   const { data } = await api.get<Pagamento[]>('/pagamentos/')
   return data
 }
+
+export async function criarPagamento(idRegistro: number, tipoCartao: string) {
+  const { data } = await api.post<Pagamento>('/pagamentos/', {
+    id_registro: idRegistro,
+    tipo_cartao: tipoCartao,
+  })
+  return data
+}
