@@ -1,12 +1,12 @@
+
 import { createRouter, createWebHistory } from 'vue-router'
 import AppLayout from '@/components/AppLayout.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  // TODO: adicionar as rotas conforme as telas forem criadas
   routes: [
-    { 
-      path: '/', 
+    {
+      path: '/',
       component: AppLayout,
       children: [
         {
@@ -15,33 +15,31 @@ const router = createRouter({
         },
         {
           path: '/guardas',
-          component:()=>import('@/views/GuardasView.vue')
+          component: () => import('@/views/GuardasView.vue')
         },
         {
           path: '/colaboradores',
-          component:()=>import('@/views/ColaboradoresView.vue')
+          component: () => import('@/views/ColaboradoresView.vue')
         },
         {
           path: '/veiculos',
-          component:()=>import('@/views/VeiculosView.vue')
+          component: () => import('@/views/VeiculosView.vue')
         },
         {
           path: '/vagas',
-          component:()=>import('@/views/VagasView.vue')
+          component: () => import('@/views/VagasView.vue')
         }
-
       ]
     },
     {
-      path: '/login', 
+      path: '/login',
       component: () => import('@/views/LoginView.vue')
     },
     {
       path: '/redefinir-senha',
       component: () => import('@/views/RedefinirSenhaView.vue')
     }
-  ],
-
+  ]
 })
 
 export default router

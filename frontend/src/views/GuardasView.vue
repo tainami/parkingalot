@@ -297,6 +297,7 @@ async function confirmarExclusao(){
             <DataTable
                 :columns="columns"
                 :rows="linhasFiltradas"
+                :mostrarExcluir="true"
                 @editar="editarGuarda"
                 @excluir="excluirGuarda"
             />
@@ -318,6 +319,7 @@ async function confirmarExclusao(){
                     @update:model-value="validarCPF"
                     @keydown="bloquearLetra"
                     :disabled="modoEdicao"
+                    :maxlength="14"
                     rotulo="CPF"
                     placeholder="000.000.000-00"
                     obrigatorio
