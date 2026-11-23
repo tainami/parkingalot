@@ -1,16 +1,11 @@
 <script setup lang="ts">
 import {ref, computed, onMounted} from 'vue'
-import api from '@/services/api'
 import CrudLayout from '@/components/CrudLayout.vue';
 import BaseButton from '@/components/BaseButton.vue';
 import BaseField from '@/components/BaseField.vue';
 import DataTable from '@/components/DataTable.vue';
-
-interface Vaga {
-    numero: number
-    tipo_vaga: string
-    status_vaga: boolean
-}
+import StatusPill from '@/components/StatusPill.vue';
+import { atualizarVaga, criarVaga, listarVagas } from '@/services/vagas'
 
 interface VagaTabela {
     'Número': number
@@ -28,8 +23,16 @@ const numero = ref('')
 const modoEdicao = ref(false)
 const numeroOriginal = ref<number | null>(null)
 
+type TipoMensagem = 'sucesso' | 'erro' | 'info'
+
 const mensagem = ref('')
+const tipoMensagem = ref<TipoMensagem>('info')
 const carregando = ref(false)
+
+function mostrarMensagem(texto: string, tipo: TipoMensagem){
+    mensagem.value = texto
+    tipoMensagem.value = tipo
+}
 
 const linhasFiltradas = computed(()=>{
     const termo = busca.value.toLowerCase()
@@ -41,13 +44,13 @@ const linhasFiltradas = computed(()=>{
     )
 })
 
-async function listarVagas(){
+async function carregarVagas(){
     carregando.value = true
 
     try{
-        const resposta = await api.get('/vagas/')
+        const vagas = await listarVagas()
 
-        rows.value = resposta.data.map((vaga:Vaga)=>({
+        rows.value = vagas.map((vaga)=>({
             'Número': vaga.numero,
             Tipo: vaga.tipo_vaga === 'COLABORADOR' ? 'Colaborador' : 'Terceiro',
             Status: vaga.status_vaga ? 'Ocupada' : 'Livre',
@@ -55,7 +58,7 @@ async function listarVagas(){
         }))
     }
     catch (erro){
-        mensagem.value = 'Erro ao carregar vagas'
+        mostrarMensagem('Erro ao carregar vagas', 'erro')
     }
     finally{
         carregando.value = false
@@ -64,7 +67,7 @@ async function listarVagas(){
 
 async function cadastrar(){
     if(!numero.value){
-        mensagem.value = 'Preencha todos os campos'
+        mostrarMensagem('Preencha todos os campos', 'erro')
         return
     }
 
@@ -77,26 +80,20 @@ async function cadastrar(){
 
     try{
 
-        if(modoEdicao.value){
-            await api.put(`/vagas/${numeroOriginal.value}`, {
-                numero: Number(numero.value)
-            }
-            )
+        if(modoEdicao.value && numeroOriginal.value !== null){
+            await atualizarVaga(numeroOriginal.value, Number(numero.value))
         }
         else{
-            await api.post('/vagas/',{
-                numero: Number(numero.value)
-            })
+            await criarVaga(Number(numero.value))
         }
-        
 
-        await listarVagas()
+        await carregarVagas()
         limparFormulario()
-        mensagem.value = textoSucesso
+        mostrarMensagem(textoSucesso, 'sucesso')
         }
     
     catch (erro: any){
-        mensagem.value = erro.response?.data?.error || 'Erro ao salvar vaga'
+        mostrarMensagem(erro.response?.data?.error || 'Erro ao salvar vaga', 'erro')
     }
     finally{
         carregando.value = false
@@ -107,7 +104,7 @@ function editarVaga(vaga:VagaTabela){
     modoEdicao.value = true
     numeroOriginal.value = vaga.numeroCompleto
     numero.value = String(vaga.numeroCompleto)
-    mensagem.value = 'Editando vaga'
+    mostrarMensagem('Editando vaga', 'info')
 }
 
 function limparFormulario(){
@@ -118,7 +115,7 @@ function limparFormulario(){
 }
 
 onMounted(()=>{
-    listarVagas()
+    carregarVagas()
 })
 
 </script>
@@ -144,11 +141,7 @@ onMounted(()=>{
 
                 <p
                     v-if="mensagem"
-                    :class="{
-                        'mensagem-sucesso': mensagem.includes('sucesso'),
-                        'mensagem-erro': mensagem.includes('Erro') ||  mensagem.includes('Preencha'),
-                        'mensagem-info': mensagem.includes('Editando')
-                    }"
+                    :class="`mensagem-${tipoMensagem}`"
                 >
                     {{ mensagem }}
                 </p>
@@ -181,7 +174,16 @@ onMounted(()=>{
                 :rows="linhasFiltradas"
                 :mostrarExcluir="false"
                 @editar="editarVaga"
-            />
+            >
+                <template #celula="{ coluna, valor }">
+                    <StatusPill
+                        v-if="coluna === 'Status'"
+                        :texto="valor"
+                        :variante="valor === 'Ocupada' ? 'azul-claro' : 'cinza'"
+                    />
+                    <template v-else>{{ valor }}</template>
+                </template>
+            </DataTable>
         </template>
 
     </CrudLayout>
