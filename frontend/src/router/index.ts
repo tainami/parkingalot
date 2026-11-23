@@ -59,4 +59,13 @@ const router = createRouter({
   ]
 })
 
+const ROTAS_PUBLICAS = ['/login', '/redefinir-senha']
+
+router.beforeEach((rota) => {
+  const logado = !!sessionStorage.getItem('token')
+
+  if (!logado && !ROTAS_PUBLICAS.includes(rota.path)) return '/login'
+  if (logado && rota.path === '/login') return '/'
+})
+
 export default router
