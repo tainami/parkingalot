@@ -8,6 +8,7 @@ withDefaults(
     tipo?: 'text' | 'email' | 'password' | 'number' | 'search' | 'date'
     disabled?: boolean
     obrigatorio?: boolean
+    dica?: string
   }>(),
   {
     placeholder: 'Digite aqui',
@@ -39,6 +40,8 @@ defineEmits<{
       :required="obrigatorio"
       @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
     />
+
+    <span v-if="dica" class="dica">{{ dica }}</span>
   </div>
 </template>
 
@@ -50,8 +53,14 @@ defineEmits<{
 }
 
 .rotulo {
+  color: var(--color-text-soft);
+  font: 600 13px var(--font-family);
+}
+
+.dica {
   color: var(--color-text-muted);
-  font: 500 12px var(--font-family);
+  font: 400 12px var(--font-family);
+  line-height: 1.5;
 }
 
 .obrigatorio {
@@ -60,13 +69,13 @@ defineEmits<{
 
 input {
   width: 100%;
-  height: 36px;
-  padding: 0 10px;
+  height: var(--control-height);
+  padding: 0 12px;
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--color-surface);
   color: var(--color-text);
-  font: 400 12px var(--font-family);
+  font: 400 14px var(--font-family);
   outline: none;
   box-sizing: border-box;
 }

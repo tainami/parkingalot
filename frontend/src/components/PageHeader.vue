@@ -54,13 +54,13 @@ defineEmits<{
 h1 {
   margin: 0;
   color: var(--color-text);
-  font: 600 22px var(--font-family);
+  font: 600 26px var(--font-family);
 }
 
 p {
   margin: 0;
   color: var(--color-text-muted);
-  font: 400 12px var(--font-family);
+  font: 400 14px var(--font-family);
 }
 
 @media (max-width: 600px) {
