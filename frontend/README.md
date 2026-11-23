@@ -30,7 +30,7 @@ npm run format
 
 ```
 src/
-├── assets/       # CSS global e variáveis (tokens.css)
+├── assets/       # CSS global e variáveis
 ├── components/   # componentes reutilizáveis
 ├── router/       # rotas
 ├── services/     # chamadas à API
@@ -39,9 +39,3 @@ src/
 ├── utils/        # formatação, cálculo de tarifa e exportação para Excel
 └── views/        # uma view por tela
 ```
-
-## Convenções
-
-- Componentes e views em PascalCase (`BaseButton.vue`, `VagasView.vue`).
-- Chamadas à API só em `src/services/`. Rotas de listagem e criação terminam com barra (`/vagas/`).
-- Cores e medidas só pelas variáveis do `tokens.css`.
