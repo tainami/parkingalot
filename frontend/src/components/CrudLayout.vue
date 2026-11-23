@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import BaseField from '@/components/BaseField.vue'
+import PageHeader from '@/components/PageHeader.vue'
 
 defineProps<{
   titulo: string
@@ -13,10 +14,7 @@ const busca = defineModel<string>('busca', { default: '' })
 
 <template>
   <div class="crud-layout">
-    <header>
-      <h1>{{ titulo }}</h1>
-      <p class="subtitulo">{{ subtitulo }}</p>
-    </header>
+    <PageHeader :titulo="titulo" :subtitulo="subtitulo" />
 
     <div class="corpo">
       <section class="lista">
@@ -37,19 +35,6 @@ const busca = defineModel<string>('busca', { default: '' })
   display: flex;
   flex-direction: column;
   gap: 24px;
-  padding: 8px 4px;
-}
-
-h1 {
-  margin: 0;
-  color: var(--color-text);
-  font: 600 28px var(--font-family);
-}
-
-.subtitulo {
-  margin: 8px 0 0;
-  color: var(--color-text-muted);
-  font: 400 14px var(--font-family);
 }
 
 .corpo {
@@ -69,8 +54,8 @@ h1 {
 
 .formulario {
   box-sizing: border-box;
-  flex: 1 1 300px;
-  max-width: 300px;
+  flex: 1 1 var(--largura-painel);
+  max-width: var(--largura-painel);
   padding: 22px;
   border: 1px solid var(--color-border);
   border-radius: 12px;

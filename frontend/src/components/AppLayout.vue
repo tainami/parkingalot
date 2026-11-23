@@ -49,18 +49,14 @@ import AppSideBar from './AppSideBar.vue'
     box-sizing: border-box;
     flex:1;
     min-width: 0;
-    padding: 18px 20px;
-    
 }
 
 .content-container{
     box-sizing: border-box;
     width: 100%;
-    min-height: calc(100vh - 36px);
-    background-color: #FFFF;
-    border-radius: 14px;
-    padding: 20px 24px;
-    box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+    min-height: 100vh;
+    background-color: var(--color-surface);
+    padding: 28px 32px;
 }
 
 .page-enter-active, .page-leave-active{
