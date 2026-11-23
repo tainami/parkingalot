@@ -3,7 +3,7 @@ import type { EstadoVaga } from '@/types/mapa'
 
 withDefaults(
   defineProps<{
-    codigo: string
+    numero: number
     estado: EstadoVaga
     selecionada?: boolean
     esmaecida?: boolean
@@ -17,7 +17,7 @@ withDefaults(
 )
 
 defineEmits<{
-  click: [codigo: string]
+  click: [numero: number]
 }>()
 </script>
 
@@ -26,22 +26,24 @@ defineEmits<{
     type="button"
     class="vaga"
     :class="[estado, { selecionada, esmaecida, oculta }]"
-    :aria-label="`Vaga ${codigo}`"
+    :aria-label="`Vaga ${numero}`"
     :aria-pressed="selecionada"
     :tabindex="oculta ? -1 : undefined"
-    @click="$emit('click', codigo)"
+    @click="$emit('click', numero)"
   >
-    <template v-if="selecionada">{{ codigo }}</template>
+    {{ numero }}
   </button>
 </template>
 
 <style scoped>
 .vaga {
-  height: 44px;
+  aspect-ratio: 62 / 44;
+  min-height: 36px;
+  max-height: 72px;
   padding: 0;
   border: 0;
   border-radius: 6px;
-  font: 600 13px var(--font-family);
+  font: 500 13px var(--font-family);
   cursor: pointer;
   transition: opacity 0.15s;
 }
@@ -54,6 +56,10 @@ defineEmits<{
 .colaborador {
   background: var(--color-vaga-colaborador);
   color: var(--color-surface);
+}
+
+.selecionada {
+  font-weight: 700;
 }
 
 .colaborador.selecionada {

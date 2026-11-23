@@ -8,6 +8,17 @@ function partes(valor: string) {
   }
 }
 
+export function paraDataLocal(valor: string) {
+  const data = new Date(valor)
+  return new Date(
+    data.getUTCFullYear(),
+    data.getUTCMonth(),
+    data.getUTCDate(),
+    data.getUTCHours(),
+    data.getUTCMinutes(),
+  )
+}
+
 export function formatarDataHora(valor: string) {
   const { dia, mes, hora, minuto } = partes(valor)
   return `${dia}/${mes} ${hora}:${minuto}`
@@ -24,8 +35,7 @@ export function formatarDataEHora(dataIso: string, hora: string) {
 }
 
 export function formatarPermanencia(entrada: string, saida: string) {
-  const minutos = Math.max(0, Math.round((Date.parse(saida) - Date.parse(entrada)) / 60000))
-  return `${Math.floor(minutos / 60)}h ${String(minutos % 60).padStart(2, '0')}min`
+  return formatarDuracao((Date.parse(saida) - Date.parse(entrada)) / 60000)
 }
 
 export function formatarMoeda(valor: number) {
@@ -37,4 +47,14 @@ export function dataDeHoje() {
   const mes = String(agora.getMonth() + 1).padStart(2, '0')
   const dia = String(agora.getDate()).padStart(2, '0')
   return `${agora.getFullYear()}-${mes}-${dia}`
+}
+
+export function formatarHora(valor: string) {
+  const { hora, minuto } = partes(valor)
+  return `${hora}:${minuto}`
+}
+
+export function formatarDuracao(minutosTotais: number) {
+  const minutos = Math.max(0, Math.round(minutosTotais))
+  return `${Math.floor(minutos / 60)}h ${String(minutos % 60).padStart(2, '0')}min`
 }

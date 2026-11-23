@@ -3,7 +3,7 @@ export type EstadoVaga = 'livre' | 'colaborador' | 'terceiro'
 export type FiltroVagas = 'todas' | 'livre' | 'ocupada'
 
 export interface VagaMapa {
-  codigo: string
+  numero: number
   estado: EstadoVaga
 }
 
