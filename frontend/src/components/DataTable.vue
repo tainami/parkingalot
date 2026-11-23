@@ -2,11 +2,15 @@
 import EditButton from './EditButton.vue'
 import DeleteButton from './DeleteButton.vue'
 
-defineProps<{
+withDefaults(defineProps<{
     columns: string[]
     rows: Record<string, any>[]
-    mostrarExcluir?:boolean
-}>()
+    mostrarExcluir?: boolean
+    mostrarAcoes?: boolean
+}>(), {
+    mostrarExcluir: true,
+    mostrarAcoes: true,
+})
 
 
 defineEmits<{
@@ -24,13 +28,14 @@ defineEmits<{
                     <th v-for="column in columns" :key="column">
                         {{ column }}
                     </th>
-                    <th>Ações</th>
+                    <th v-if="mostrarAcoes">Ações</th>
                 </tr>
             </thead>
 
                 <tbody>
                     <tr v-for="(row, index) in rows" :key="index">
                         <td v-for="column in columns" :key="column">
+                            <slot name="celula" :coluna="column" :valor="row[column]" :row="row">
                             <span
                                 v-if="column === 'Status' && ['Ocupada', 'Livre'].includes(row[column])"
                                 :class="[
@@ -42,19 +47,20 @@ defineEmits<{
                             </span>
 
                             <template v-else>
-                                {{ row[column === 'Número' ? 'Numero' : column] }}
+                                {{ row[column] }}
                             </template>
+                            </slot>
                         </td>
-                        <td class="actions">
+                        <td v-if="mostrarAcoes" class="actions">
                             <EditButton @click="$emit('editar', row)" />
                             <DeleteButton
-                             v-if="mostrarExcluir !==false"
+                             v-if="mostrarExcluir"
                              @click="$emit('excluir', row)" />
                         </td>
                     </tr>
 
                     <tr v-if="rows.length === 0">
-                        <td :colspan="columns.length + 1" class="no-data">
+                        <td :colspan="columns.length + (mostrarAcoes ? 1 : 0)" class="no-data">
                             Nenhum dado disponível
                         </td>
                     </tr>

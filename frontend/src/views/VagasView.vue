@@ -13,7 +13,7 @@ interface Vaga {
 }
 
 interface VagaTabela {
-    Numero: number
+    'Número': number
     Tipo: string
     Status: string
     numeroCompleto: number
@@ -35,7 +35,7 @@ const linhasFiltradas = computed(()=>{
     const termo = busca.value.toLowerCase()
 
     return rows.value.filter(vaga =>
-        String(vaga.Numero).includes(termo) ||
+        String(vaga['Número']).includes(termo) ||
         vaga.Tipo.toLowerCase().includes(termo) ||
         vaga.Status.toLowerCase().includes(termo)
     )
@@ -48,7 +48,7 @@ async function listarVagas(){
         const resposta = await api.get('/vagas/')
 
         rows.value = resposta.data.map((vaga:Vaga)=>({
-            Numero: vaga.numero,
+            'Número': vaga.numero,
             Tipo: vaga.tipo_vaga === 'COLABORADOR' ? 'Colaborador' : 'Terceiro',
             Status: vaga.status_vaga ? 'Ocupada' : 'Livre',
             numeroCompleto: vaga.numero

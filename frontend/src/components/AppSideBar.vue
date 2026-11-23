@@ -22,7 +22,7 @@ async function fazerLogout(){
 }
 
 const menuItems=[
-    {name: 'Mapa de vagas', path:'/mapa', icon: 'mapa'},
+    {name: 'Mapa de vagas', path:'/', icon: 'mapa'},
     {name:'Registro', path:'/registros', icon:'registros'},
     {name:'Pagamentos', path:'/pagamentos', icon:'pagamentos'},
     {name:'Veículos', path:'/veiculos', icon:'veiculos'},
