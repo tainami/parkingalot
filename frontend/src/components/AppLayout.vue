@@ -35,7 +35,10 @@ import AppSideBar from './AppSideBar.vue'
     box-sizing: border-box;
     width: 250px;
     min-width: 200px;
-    min-height: 100vh;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    overflow-y: auto;
     flex-shrink: 0;
     background-color: #FFFF;
     border-right: 1px solid #E5E7EB;
