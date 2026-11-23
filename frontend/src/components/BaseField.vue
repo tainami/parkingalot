@@ -5,7 +5,7 @@ withDefaults(
     placeholder?: string
     maxlength?:number
     modelValue?: string
-    tipo?: 'text' | 'email' | 'password' | 'number' | 'search'
+    tipo?: 'text' | 'email' | 'password' | 'number' | 'search' | 'date'
     disabled?: boolean
     obrigatorio?: boolean
   }>(),
