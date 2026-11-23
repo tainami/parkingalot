@@ -10,7 +10,7 @@ REST API em Flask + SQLAlchemy para controle de estacionamento.
  
 ```bash
 cd backend
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
@@ -31,6 +31,22 @@ python run.py
  
 Server: `http://127.0.0.1:5000`
  
+## First guard
+
+```bash
+flask --app run criar-guarda
+```
+
+CPF só com números; turno `Manhã`, `Tarde` ou `Noite`.
+
+## Sample data
+
+```bash
+flask --app run popular-banco
+```
+
+Cria vagas, colaboradores, veículos e registros de exemplo. Rode depois do `criar-guarda`.
+
 ## Lint / Format (Ruff)
  
 ```bash
