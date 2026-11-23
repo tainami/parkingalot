@@ -3,6 +3,7 @@ withDefaults(
   defineProps<{
     rotulo: string
     placeholder?: string
+    maxlength?:number
     modelValue?: string
     tipo?: 'text' | 'email' | 'password' | 'number' | 'search' | 'date'
     disabled?: boolean
@@ -34,6 +35,7 @@ defineEmits<{
       :value="modelValue"
       :placeholder="placeholder"
       :disabled="disabled"
+      :maxlength="maxlength"
       :required="obrigatorio"
       @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
     />
